@@ -29,7 +29,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     bundleIdentifier: 'com.molulabs.censo',
     supportsTablet: true,
   },
-  plugins: [['expo-build-properties', { android: { minSdkVersion: 24 } }]],
+  plugins: [['expo-build-properties', { android: { minSdkVersion: 24 } }], 'expo-secure-store'],
   extra: {
     apiUrl,
   },

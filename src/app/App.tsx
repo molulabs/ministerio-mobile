@@ -1,91 +1,48 @@
-import Constants from 'expo-constants';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
-import { type ApiHealth, checkApiHealth } from '@/src/infrastructure/api/health';
+import { LoginScreen } from '@/src/features/auth/screens/login.screen';
+import { useSession } from '@/src/features/auth/session.store';
+import { ProfileScreen } from '@/src/features/profile/screens/profile.screen';
 
-const appName = Constants.expoConfig?.name ?? 'Censo';
-const appVersion = Constants.expoConfig?.version ?? '';
-
-const apiStatusText: Record<ApiHealth | 'checking', string> = {
-  checking: 'API: comprobando…',
-  ok: 'API: conectada',
-  unavailable: 'API: sin conexión',
-};
-
+/** Until navigation arrives, the session decides which screen is shown. */
 export default function App() {
-  const [apiStatus, setApiStatus] = useState<ApiHealth | 'checking'>('checking');
+  const status = useSession((state) => state.status);
+  const user = useSession((state) => state.user);
+  const restore = useSession((state) => state.restore);
+  const signOut = useSession((state) => state.signOut);
 
   useEffect(() => {
-    let cancelled = false;
-    checkApiHealth().then((status) => {
-      if (!cancelled) setApiStatus(status);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const retry = async () => {
-    setApiStatus('checking');
-    setApiStatus(await checkApiHealth());
-  };
+    restore();
+  }, [restore]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{appName}</Text>
-      <Text style={styles.version}>Versión {appVersion}</Text>
-      <Text
-        style={[
-          styles.apiStatus,
-          apiStatus === 'checking' && styles.apiStatusChecking,
-          apiStatus === 'unavailable' && styles.apiStatusError,
-        ]}
-      >
-        {apiStatusText[apiStatus]}
-      </Text>
-      <Pressable onPress={retry} disabled={apiStatus === 'checking'} style={styles.retry}>
-        <Text style={styles.retryText}>Reintentar</Text>
-      </Pressable>
+    <>
+      {status === 'restoring' && (
+        <View style={styles.restoring}>
+          <ActivityIndicator size="large" />
+        </View>
+      )}
+      {status === 'signedOut' && <LoginScreen />}
+      {status === 'signedIn' && user && (
+        <ProfileScreen
+          firstname={user.firstname}
+          lastname={user.lastname}
+          email={user.email}
+          onSignOut={signOut}
+        />
+      )}
       <StatusBar style="auto" />
-    </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  restoring: {
     flex: 1,
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '600',
-  },
-  version: {
-    fontSize: 14,
-    color: '#666',
-  },
-  apiStatus: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#1a7f37',
-  },
-  apiStatusChecking: {
-    color: '#666',
-  },
-  apiStatusError: {
-    color: '#cf222e',
-  },
-  retry: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  retryText: {
-    fontSize: 14,
-    color: '#0969da',
   },
 });
