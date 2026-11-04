@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "Censo",
+    "slug": "censo-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "android": {
+      "package": "com.molulabs.censo",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "ios": {
+      "bundleIdentifier": "com.molulabs.censo",
+      "supportsTablet": true
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 24
+          }
+        }
+      ]
+    ]
+  }
+}
