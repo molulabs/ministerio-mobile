@@ -14,8 +14,10 @@ const Tab = createBottomTabNavigator<MainTabsParamList>();
 
 function HomeTab() {
   const firstname = useSession((state) => state.user?.firstname);
+  // The catalogs are what the census form needs offline; the home only gets a yes or no.
+  const catalogsSyncedAt = useSyncState(syncKeys.catalogsSyncedAt);
   if (!firstname) return null;
-  return <HomeScreen firstname={firstname} />;
+  return <HomeScreen firstname={firstname} offlineDataMissing={catalogsSyncedAt === null} />;
 }
 
 /** Features do not import each other: the profile gets the session user and sync state from here. */

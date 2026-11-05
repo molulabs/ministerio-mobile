@@ -19,9 +19,11 @@ jest.mock('@/src/features/auth/session.store', () => ({
 }));
 
 // The tabs read the sync state from the local database, which tests do not open.
+let mockSyncState: Record<string, string>;
+
 jest.mock('@/src/infrastructure/sync/syncState', () => ({
-  syncKeys: { lastSyncAt: 'lastSyncAt' },
-  useSyncState: () => null,
+  syncKeys: { lastSyncAt: 'lastSyncAt', catalogsSyncedAt: 'catalogsSyncedAt' },
+  useSyncState: (key: string) => mockSyncState[key] ?? null,
 }));
 
 const rosa = { firstname: 'Rosa', lastname: 'Mendieta', email: 'rosa@company.com' };
@@ -36,6 +38,7 @@ function renderNavigation() {
 
 describe('RootStack', () => {
   beforeEach(() => {
+    mockSyncState = {};
     mockState = {
       status: 'signedOut',
       user: null,
@@ -61,6 +64,21 @@ describe('RootStack', () => {
     expect(screen.queryByText('Iniciar sesión')).not.toBeOnTheScreen();
   });
 
+  it('warns on the home tab while the offline data was never downloaded', async () => {
+    mockState = { ...mockState, status: 'signedIn', user: rosa, mode: 'online' };
+    await renderNavigation();
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/no se descargaron los datos/);
+  });
+
+  it('does not warn once the offline data was downloaded', async () => {
+    mockState = { ...mockState, status: 'signedIn', user: rosa, mode: 'online' };
+    mockSyncState = { catalogsSyncedAt: '1000' };
+    await renderNavigation();
+
+    expect(screen.queryByRole('alert')).not.toBeOnTheScreen();
+  });
+
   it('moves between the tabs', async () => {
     mockState = { ...mockState, status: 'signedIn', user: rosa, mode: 'online' };
     await renderNavigation();
@@ -80,7 +98,7 @@ describe('RootStack', () => {
     await renderNavigation();
 
     await fireEvent.press(screen.getByRole('button', { name: /^Perfil/ }));
-    await fireEvent.press(screen.getByRole('button', { name: 'Salir' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Cerrar sesión' }));
 
     expect(mockState.signOut).toHaveBeenCalled();
   });

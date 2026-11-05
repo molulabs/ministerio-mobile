@@ -39,7 +39,16 @@ Offline-first Android app (iOS later) for the livestock/producer census of the M
 - Schema changes: edit `schema.ts`, then `pnpm db:generate --name <what_changed>`. Migrations are bundled as `.sql` (Babel `inline-import` + Metro `sourceExts`) and run at start-up, before navigation is shown.
 - `bootstrap()` opens the database before restoring the session; call `getDatabase()` only after that (it throws otherwise).
 - Screens get live data with `useLiveQuery` (the database is opened with `enableChangeListener`), e.g. `useSyncState` in `infrastructure/sync/syncState.ts`.
-- No census tables yet: only `sync_state` (key/value for the sync engine, e.g. `lastSyncAt`).
+- No census tables yet. `sync_state` is key/value for the sync engine (`lastSyncAt`, `catalogsEtag`); the catalog tables (`localities`, `livestock_breeds`, `forest_species`, `producer_index`) are written only by the catalogs puller.
+
+## Sync
+
+- Only the sync engine talks to the API (besides sign-in). `src/app/sync.ts` wires it to its triggers: start-up, an online sign-in, the signal coming back and the app coming back to the front. It does nothing without an online session (an offline sign-in has no tokens).
+- One sync at a time: a trigger that arrives while one runs joins it. A failure keeps what the phone has and waits for the next trigger; there is no retry loop.
+- Automatic triggers skip the sync when the catalogs were synced less than 15 minutes ago (`SYNC_MIN_INTERVAL_MS`). An online sign-in always syncs (`force`).
+- Catalogs (`infrastructure/sync/catalogs.puller.ts`): `GET /api/mobile/catalogs` with the saved ETag. A 304 only updates `catalogsSyncedAt` and `lastSyncAt`; a 200 is checked and then replaces every catalog, the ETag and both sync times in one transaction. A bad body or a failed request never touches the saved catalogs.
+- Signal (`infrastructure/network/network.monitor.ts`, `expo-network`): Android repeats the network event every ~3 s without changes, so only the no-signal → signal transition counts, and the signal must then hold 30 s (`STABLE_SIGNAL_MS`) before a sync; a cut in between cancels it.
+- No generic task queue: censuses will be queued in the outbox (SQLite), and catalogs only need single-flight plus the interval.
 
 ## Platform targets
 

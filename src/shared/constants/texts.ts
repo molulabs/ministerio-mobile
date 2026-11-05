@@ -45,6 +45,8 @@ export const texts = {
   home: {
     welcome: (firstname: string) => `¡Hola, ${firstname}!`,
     empty: 'Elegí una pestaña para empezar.',
+    offlineDataMissing:
+      'Todavía no se descargaron los datos para trabajar sin conexión. Conectate a internet antes de salir.',
   },
   census: {
     empty: 'Acá vas a ver tus censos: borradores, pendientes de envío, enviados y a corregir.',
@@ -54,8 +56,8 @@ export const texts = {
   },
   profile: {
     greeting: (firstname: string) => `Hola, ${firstname}`,
-    signOut: 'Salir',
-    signingOut: 'Saliendo…',
+    signOut: 'Cerrar sesión',
+    signingOut: 'Cerrando sesión…',
     offlineMode: 'Sin conexión: entraste con los datos guardados en este teléfono.',
     lastSync: (time: number | null) =>
       time === null

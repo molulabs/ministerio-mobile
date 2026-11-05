@@ -4,17 +4,24 @@ import { texts } from '@/src/shared/constants/texts';
 
 type Props = {
   firstname: string;
+  /** The data needed to work without signal was never downloaded on this phone. */
+  offlineDataMissing: boolean;
 };
 
 /**
  * Landing tab after signing in. Generic on purpose: the app will be forked for other apps, so
  * nothing here knows about censuses.
  */
-export function HomeScreen({ firstname }: Props) {
+export function HomeScreen({ firstname, offlineDataMissing }: Props) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{texts.home.welcome(firstname)}</Text>
       <Text style={styles.text}>{texts.home.empty}</Text>
+      {offlineDataMissing && (
+        <Text style={styles.notice} accessibilityRole="alert">
+          {texts.home.offlineDataMissing}
+        </Text>
+      )}
     </View>
   );
 }
@@ -36,6 +43,15 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 15,
     color: '#555',
+    textAlign: 'center',
+  },
+  notice: {
+    marginTop: 16,
+    fontSize: 14,
+    color: '#9a6700',
+    backgroundColor: '#fff8c5',
+    borderRadius: 8,
+    padding: 12,
     textAlign: 'center',
   },
 });
