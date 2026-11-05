@@ -30,10 +30,10 @@ Change minSdk only in `app.json`, never in `android/`. The ministry's field phon
 
 - Everything runs on the host (not in Docker), except the API.
 - The app reaches the API through the mobile port of the local nginx, `8000` (`infra/dev/nginx/mobile.conf`), which serves the API whatever the Host header is. Port 80 routes by host name (`api.*.local`) and does not work from the emulator.
-- API URL: `app.config.ts` → `extra.apiUrl`, default `http://10.0.2.2:8000` (the host as seen from the emulator). A phone on the LAN: `API_URL=http://<computer IP>:8000 pnpm start`. Restart Metro after changing it.
+- API URL: `API_URL` in `.env` (committed, `http://10.0.2.2:8000`, the host as seen from the emulator), read by `app.config.ts` into `extra.apiUrl`; the config fails if it is missing. Personal overrides go in `.env.local` (git-ignored), e.g. a phone on the LAN: `API_URL=http://<computer IP>:8000`. Restart Metro after changing either. Secrets never go in `.env`: they will live in EAS environment variables.
 - Dev users (API fixtures, password `password`): `rosa@company.com` and `hugo@company.com` are enumerators; `user@company.com` is an operator, which the app must reject.
 - Debug builds allow plain HTTP (generated debug manifest); release builds do not.
 - Run the API console as the php-fpm user, `docker exec -u www-data ministerio-api-1 bin/console …`: run as root, it leaves a cache the API cannot write (every request then fails with 500).
-- Emulator: `emulator -avd Medium_Phone_API_37.0 -gpu host` (auto GPU mode crashed on API 37).
+- Emulator: `emulator -avd Medium_Phone_API_37.0 -gpu swiftshader_indirect` (software rendering). On this machine both `auto` and `host` GPU modes crashed the API 37 emulator.
 - Do not start Metro with `CI=1`: it disables watch mode and hot reload.
 - `android/` and `ios/` are generated (CNG) and git-ignored.

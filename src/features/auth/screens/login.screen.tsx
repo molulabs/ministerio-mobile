@@ -18,6 +18,7 @@ import { initialValues, type LoginFormValues, validationSchema } from './login.s
 
 export function LoginScreen() {
   const signIn = useSession((state) => state.signIn);
+  const expired = useSession((state) => state.expired);
   const [signInError, setSignInError] = useState<SignInErrorKind | null>(null);
 
   const form = useFormik<LoginFormValues>({
@@ -42,6 +43,8 @@ export function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <Text style={styles.title}>{texts.login.title}</Text>
+
+      {expired && !signInError && <Text style={styles.notice}>{texts.login.sessionExpired}</Text>}
 
       <View style={styles.field}>
         <Text style={styles.label}>{texts.login.email}</Text>
@@ -105,6 +108,13 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '600',
     marginBottom: 8,
+  },
+  notice: {
+    fontSize: 14,
+    color: '#9a6700',
+    backgroundColor: '#fff8c5',
+    borderRadius: 8,
+    padding: 12,
   },
   field: {
     gap: 4,

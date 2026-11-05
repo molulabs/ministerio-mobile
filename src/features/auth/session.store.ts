@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import { setAccessToken } from '@/src/infrastructure/api/client';
+import { configureAuthRefresh, setAccessToken } from '@/src/infrastructure/api/client';
 import { httpErrorKind } from '@/src/infrastructure/api/errors';
 import { secureStore } from '@/src/infrastructure/storage/secureStore';
 
@@ -18,7 +18,9 @@ type SessionStatus = 'restoring' | 'signedOut' | 'signedIn';
 interface SessionState {
   status: SessionStatus;
   user: SessionUser | null;
-  /** Reads the saved session at start-up. Works without signal: it never calls the API. */
+  /** True when the session ended because the API refused the refresh token. */
+  expired: boolean;
+  /** Reads the saved session at start-up. Works without signal: it never waits for the API. */
   restore: () => Promise<void>;
   /** Throws SignInError; nothing is saved unless every step succeeds. */
   signIn: (email: string, password: string) => Promise<void>;
@@ -34,6 +36,7 @@ async function clearSavedSession(): Promise<void> {
 export const useSession = create<SessionState>()((set) => ({
   status: 'restoring',
   user: null,
+  expired: false,
 
   async restore() {
     try {
@@ -44,7 +47,8 @@ export const useSession = create<SessionState>()((set) => ({
       ]);
       if (accessToken && refreshToken && user) {
         setAccessToken(accessToken);
-        set({ status: 'signedIn', user });
+        set({ status: 'signedIn', user, expired: false });
+        void refreshCurrentUser(user.id);
         return;
       }
     } catch {
@@ -85,7 +89,7 @@ export const useSession = create<SessionState>()((set) => ({
       secureStore.set(keys.refreshToken, tokens.refreshToken),
       secureStore.setJson(keys.user, user),
     ]);
-    set({ status: 'signedIn', user });
+    set({ status: 'signedIn', user, expired: false });
   },
 
   async signOut() {
@@ -94,6 +98,36 @@ export const useSession = create<SessionState>()((set) => ({
       await authService.logout(refreshToken).catch(() => {});
     }
     await clearSavedSession();
-    set({ status: 'signedOut', user: null });
+    set({ status: 'signedOut', user: null, expired: false });
   },
 }));
+
+/**
+ * Brings the saved user up to date (a name changed in the backoffice) when there is signal.
+ * Any failure keeps the saved user: offline is the normal case in the field.
+ */
+async function refreshCurrentUser(userId: number): Promise<void> {
+  try {
+    const user = await authService.fetchCurrentUser();
+    const { status, user: current } = useSession.getState();
+    if (status !== 'signedIn' || current?.id !== userId || user.id !== userId) return;
+    await secureStore.setJson(keys.user, user);
+    useSession.setState({ user });
+  } catch {
+    // Offline or session expired (the refresh interceptor already handled that).
+  }
+}
+
+configureAuthRefresh({
+  getRefreshToken: () => secureStore.get(keys.refreshToken),
+  async onTokensRefreshed(accessToken, refreshToken) {
+    await Promise.all([
+      secureStore.set(keys.accessToken, accessToken),
+      secureStore.set(keys.refreshToken, refreshToken),
+    ]);
+  },
+  async onSessionExpired() {
+    await clearSavedSession();
+    useSession.setState({ status: 'signedOut', user: null, expired: true });
+  },
+});

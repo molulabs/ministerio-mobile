@@ -9,6 +9,7 @@ export const texts = {
     emailInvalid: 'Ingresá un email válido',
     emailRequired: 'El email es obligatorio',
     passwordRequired: 'La contraseña es obligatoria',
+    sessionExpired: 'Tu sesión expiró. Iniciá sesión de nuevo.',
     errors: {
       invalid_credentials: 'Email o contraseña incorrectos.',
       cannot_take_censuses: 'Este usuario no puede cargar censos. Usá una cuenta de censista.',
