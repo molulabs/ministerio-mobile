@@ -31,6 +31,17 @@ export const texts = {
         remainingAttempts === 1 ? 'queda 1 intento' : `quedan ${remainingAttempts} intentos`
       }.`,
   },
+  tabs: {
+    census: 'Censos',
+    map: 'Mapa',
+    profile: 'Perfil',
+  },
+  census: {
+    empty: 'Acá vas a ver tus censos: borradores, pendientes de envío, enviados y a corregir.',
+  },
+  map: {
+    empty: 'Acá va a estar el mapa de Jujuy, disponible sin conexión.',
+  },
   profile: {
     greeting: (firstname: string) => `Hola, ${firstname}`,
     signOut: 'Salir',

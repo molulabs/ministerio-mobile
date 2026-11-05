@@ -15,6 +15,13 @@ Offline-first Android app (iOS later) for the livestock/producer census of the M
 - Each census is sent only with its own user's token.
 - Census rules never go into the design system (`@molulabs/ds`).
 
+## Navigation
+
+- React Navigation 7 in `src/app/navigation/`: `RootStack` (native stack) shows `Login` when signed out and `Main` (bottom tabs: Censos · Mapa · Perfil) when signed in. The session decides which screens exist, so the back button never crosses between them; nobody calls `navigate` to sign in or out.
+- Route names and params are typed in `routes.ts` (global `ReactNavigation.RootParamList`).
+- Screens live in their feature; `src/app/navigation/` wires them and passes what crosses features as props (e.g. the profile tab gets the session user).
+- Tabs show labels only until there is an icon set.
+
 ## Offline sign-in
 
 - An online sign-in keeps, per user, a PBKDF2-SHA256 verifier of the password (never the password) in SecureStore: `features/auth/offline/`. Signing out keeps it, so the user can sign in again without signal.
@@ -53,4 +60,5 @@ Change minSdk only in `app.json`, never in `android/`. The ministry's field phon
 - Run the API console as the php-fpm user, `docker exec -u www-data ministerio-api-1 bin/console …`: run as root, it leaves a cache the API cannot write (every request then fails with 500).
 - Emulator: `emulator -avd Medium_Phone_API_37.0 -gpu swiftshader_indirect` (software rendering). On this machine both `auto` and `host` GPU modes crashed the API 37 emulator.
 - Do not start Metro with `CI=1`: it disables watch mode and hot reload.
+- Do not run pnpm commands while a native build (`pnpm android`) runs: once `node_modules/.bin` was rewritten mid-build and Gradle failed on a missing intermediate file. `pnpm install --offline` relinks the bins.
 - `android/` and `ios/` are generated (CNG) and git-ignored.
