@@ -2,6 +2,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import { useSession } from '@/src/features/auth/session.store';
 import { CensusListScreen } from '@/src/features/census/screens/census-list.screen';
+import { HomeScreen } from '@/src/features/home/screens/home.screen';
 import { MapScreen } from '@/src/features/maps/screens/map.screen';
 import { ProfileScreen } from '@/src/features/profile/screens/profile.screen';
 import { syncKeys, useSyncState } from '@/src/infrastructure/sync/syncState';
@@ -10,6 +11,12 @@ import { texts } from '@/src/shared/constants/texts';
 import type { MainTabsParamList } from './routes';
 
 const Tab = createBottomTabNavigator<MainTabsParamList>();
+
+function HomeTab() {
+  const firstname = useSession((state) => state.user?.firstname);
+  if (!firstname) return null;
+  return <HomeScreen firstname={firstname} />;
+}
 
 /** Features do not import each other: the profile gets the session user and sync state from here. */
 function ProfileTab() {
@@ -41,6 +48,8 @@ export function MainTabs() {
         tabBarLabelStyle: { fontSize: 15 },
       }}
     >
+      {/* First tab, so the app opens here. Revisit when the census list exists. */}
+      <Tab.Screen name="Home" component={HomeTab} options={{ title: texts.tabs.home }} />
       <Tab.Screen
         name="Census"
         component={CensusListScreen}

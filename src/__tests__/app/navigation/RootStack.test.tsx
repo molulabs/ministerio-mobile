@@ -53,17 +53,20 @@ describe('RootStack', () => {
     expect(screen.queryByText('Perfil')).not.toBeOnTheScreen();
   });
 
-  it('opens on the census tab when signed in', async () => {
+  it('opens on the home tab when signed in', async () => {
     mockState = { ...mockState, status: 'signedIn', user: rosa, mode: 'online' };
     await renderNavigation();
 
-    expect(screen.getByText(/Acá vas a ver tus censos/)).toBeOnTheScreen();
+    expect(screen.getByText('¡Hola, Rosa!')).toBeOnTheScreen();
     expect(screen.queryByText('Iniciar sesión')).not.toBeOnTheScreen();
   });
 
   it('moves between the tabs', async () => {
     mockState = { ...mockState, status: 'signedIn', user: rosa, mode: 'online' };
     await renderNavigation();
+
+    await fireEvent.press(screen.getByRole('button', { name: /^Censos/ }));
+    expect(screen.getByText(/Acá vas a ver tus censos/)).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('button', { name: /^Mapa/ }));
     expect(screen.getByText(/mapa de Jujuy/)).toBeOnTheScreen();

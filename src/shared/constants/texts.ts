@@ -37,9 +37,14 @@ export const texts = {
       'No se pudo abrir la base de datos del teléfono. Los datos guardados no se borraron. Avisale a soporte.',
   },
   tabs: {
+    home: 'Inicio',
     census: 'Censos',
     map: 'Mapa',
     profile: 'Perfil',
+  },
+  home: {
+    welcome: (firstname: string) => `¡Hola, ${firstname}!`,
+    empty: 'Elegí una pestaña para empezar.',
   },
   census: {
     empty: 'Acá vas a ver tus censos: borradores, pendientes de envío, enviados y a corregir.',

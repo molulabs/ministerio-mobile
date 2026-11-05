@@ -14,10 +14,11 @@ Offline-first Android app (iOS later) for the livestock/producer census of the M
 - Never lose field data: never delete unsent census rows on logout, token failure or migration.
 - Each census is sent only with its own user's token.
 - Census rules never go into the design system (`@molulabs/ds`).
+- The app will be forked as a base for other apps: Inicio (`features/home/`) stays generic and never shows anything about censuses.
 
 ## Navigation
 
-- React Navigation 7 in `src/app/navigation/`: `RootStack` (native stack) shows `Login` when signed out and `Main` (bottom tabs: Censos · Mapa · Perfil) when signed in. The session decides which screens exist, so the back button never crosses between them; nobody calls `navigate` to sign in or out.
+- React Navigation 7 in `src/app/navigation/`: `RootStack` (native stack) shows `Login` when signed out and `Main` (bottom tabs: Inicio · Censos · Mapa · Perfil; the app opens on Inicio until the census list exists) when signed in. The session decides which screens exist, so the back button never crosses between them; nobody calls `navigate` to sign in or out.
 - Route names and params are typed in `routes.ts` (global `ReactNavigation.RootParamList`).
 - Screens live in their feature; `src/app/navigation/` wires them and passes what crosses features as props (e.g. the profile tab gets the session user).
 - Tabs show labels only until there is an icon set.
