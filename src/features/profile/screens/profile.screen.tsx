@@ -7,11 +7,19 @@ interface ProfileScreenProps {
   firstname: string;
   lastname: string;
   email: string;
+  /** The phone checked the password, without signal. */
+  offline: boolean;
   onSignOut: () => Promise<void>;
 }
 
 /** The user comes in by props: features do not import each other (src/app wires them). */
-export function ProfileScreen({ firstname, lastname, email, onSignOut }: ProfileScreenProps) {
+export function ProfileScreen({
+  firstname,
+  lastname,
+  email,
+  offline,
+  onSignOut,
+}: ProfileScreenProps) {
   const [signingOut, setSigningOut] = useState(false);
 
   const signOut = async () => {
@@ -26,6 +34,7 @@ export function ProfileScreen({ firstname, lastname, email, onSignOut }: Profile
         {firstname} {lastname}
       </Text>
       <Text style={styles.detail}>{email}</Text>
+      {offline && <Text style={styles.offline}>{texts.profile.offlineMode}</Text>}
       <Pressable
         style={[styles.button, signingOut && styles.buttonDisabled]}
         accessibilityRole="button"
@@ -58,6 +67,15 @@ const styles = StyleSheet.create({
   detail: {
     fontSize: 15,
     color: '#555',
+  },
+  offline: {
+    marginTop: 16,
+    fontSize: 14,
+    color: '#9a6700',
+    backgroundColor: '#fff8c5',
+    borderRadius: 8,
+    padding: 12,
+    textAlign: 'center',
   },
   button: {
     marginTop: 24,

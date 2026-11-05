@@ -4,12 +4,12 @@ import { SignInError } from '@/src/features/auth/auth.model';
 import { LoginScreen } from '@/src/features/auth/screens/login.screen';
 
 const mockSignIn = jest.fn();
-let mockExpired = false;
+let mockSignedOutReason: 'expired' | 'offline_expired' | null = null;
 
-// The screen only needs signIn and expired: the real store would bring the API client along.
+// The screen only needs signIn and signedOutReason: the real store would bring the API client along.
 jest.mock('@/src/features/auth/session.store', () => ({
   useSession: (select: (state: unknown) => unknown) =>
-    select({ signIn: mockSignIn, expired: mockExpired }),
+    select({ signIn: mockSignIn, signedOutReason: mockSignedOutReason }),
 }));
 
 async function fillAndSubmit(email: string, password: string) {
@@ -21,7 +21,7 @@ async function fillAndSubmit(email: string, password: string) {
 describe('LoginScreen', () => {
   beforeEach(() => {
     mockSignIn.mockReset();
-    mockExpired = false;
+    mockSignedOutReason = null;
   });
 
   it('asks for the email and the password before calling the API', async () => {
@@ -55,7 +55,19 @@ describe('LoginScreen', () => {
   it.each([
     ['invalid_credentials', 'Email o contraseña incorrectos.'],
     ['cannot_take_censuses', 'Este usuario no puede cargar censos. Usá una cuenta de censista.'],
-    ['network', 'No se pudo conectar con el servidor. Revisá la conexión e intentá de nuevo.'],
+    [
+      'offline_no_credential',
+      'Sin conexión, y este usuario nunca inició sesión en este teléfono. Conectate para entrar por primera vez.',
+    ],
+    [
+      'offline_expired',
+      'Pasaron más de 7 días sin conexión con el servidor. Conectate para iniciar sesión.',
+    ],
+    ['offline_locked', 'Demasiados intentos fallidos sin conexión. Conectate para iniciar sesión.'],
+    [
+      'offline_clock',
+      'La fecha del teléfono parece incorrecta. Corregila o conectate para iniciar sesión.',
+    ],
   ] as const)('shows why the sign-in failed (%s)', async (kind, message) => {
     mockSignIn.mockRejectedValue(new SignInError(kind));
     await render(<LoginScreen />);
@@ -65,8 +77,31 @@ describe('LoginScreen', () => {
     expect(await screen.findByText(message)).toBeOnTheScreen();
   });
 
+  it.each([
+    [3, 'Email o contraseña incorrectos. Sin conexión te quedan 3 intentos.'],
+    [1, 'Email o contraseña incorrectos. Sin conexión te queda 1 intento.'],
+  ])('tells how many offline attempts are left (%i)', async (remaining, message) => {
+    mockSignIn.mockRejectedValue(new SignInError('offline_wrong_password', remaining));
+    await render(<LoginScreen />);
+
+    await fillAndSubmit('rosa@company.com', 'mala');
+
+    expect(await screen.findByText(message)).toBeOnTheScreen();
+  });
+
+  it('says the 7 days without signal are over when they are', async () => {
+    mockSignedOutReason = 'offline_expired';
+    await render(<LoginScreen />);
+
+    expect(
+      screen.getByText(
+        'Pasaron más de 7 días sin conexión con el servidor. Conectate para iniciar sesión.',
+      ),
+    ).toBeOnTheScreen();
+  });
+
   it('says the session expired when it did', async () => {
-    mockExpired = true;
+    mockSignedOutReason = 'expired';
     await render(<LoginScreen />);
 
     expect(screen.getByText('Tu sesión expiró. Iniciá sesión de nuevo.')).toBeOnTheScreen();

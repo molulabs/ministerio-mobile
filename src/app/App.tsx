@@ -10,6 +10,7 @@ import { ProfileScreen } from '@/src/features/profile/screens/profile.screen';
 export default function App() {
   const status = useSession((state) => state.status);
   const user = useSession((state) => state.user);
+  const mode = useSession((state) => state.mode);
   const restore = useSession((state) => state.restore);
   const signOut = useSession((state) => state.signOut);
 
@@ -30,6 +31,7 @@ export default function App() {
           firstname={user.firstname}
           lastname={user.lastname}
           email={user.email}
+          offline={mode === 'offline'}
           onSignOut={signOut}
         />
       )}

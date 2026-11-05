@@ -9,17 +9,32 @@ export const texts = {
     emailInvalid: 'Ingresá un email válido',
     emailRequired: 'El email es obligatorio',
     passwordRequired: 'La contraseña es obligatoria',
-    sessionExpired: 'Tu sesión expiró. Iniciá sesión de nuevo.',
+    notices: {
+      expired: 'Tu sesión expiró. Iniciá sesión de nuevo.',
+      offline_expired:
+        'Pasaron más de 7 días sin conexión con el servidor. Conectate para iniciar sesión.',
+    },
     errors: {
       invalid_credentials: 'Email o contraseña incorrectos.',
       cannot_take_censuses: 'Este usuario no puede cargar censos. Usá una cuenta de censista.',
-      network: 'No se pudo conectar con el servidor. Revisá la conexión e intentá de nuevo.',
       server: 'El servidor tuvo un problema. Intentá de nuevo en unos minutos.',
+      offline_no_credential:
+        'Sin conexión, y este usuario nunca inició sesión en este teléfono. Conectate para entrar por primera vez.',
+      offline_expired:
+        'Pasaron más de 7 días sin conexión con el servidor. Conectate para iniciar sesión.',
+      offline_locked: 'Demasiados intentos fallidos sin conexión. Conectate para iniciar sesión.',
+      offline_clock:
+        'La fecha del teléfono parece incorrecta. Corregila o conectate para iniciar sesión.',
     },
+    offlineWrongPassword: (remainingAttempts: number) =>
+      `Email o contraseña incorrectos. Sin conexión te ${
+        remainingAttempts === 1 ? 'queda 1 intento' : `quedan ${remainingAttempts} intentos`
+      }.`,
   },
   profile: {
     greeting: (firstname: string) => `Hola, ${firstname}`,
     signOut: 'Salir',
     signingOut: 'Saliendo…',
+    offlineMode: 'Sin conexión: entraste con los datos guardados en este teléfono.',
   },
 } as const;

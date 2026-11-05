@@ -35,7 +35,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     bundleIdentifier: 'com.molulabs.censo',
     supportsTablet: true,
   },
-  plugins: [['expo-build-properties', { android: { minSdkVersion: 24 } }], 'expo-secure-store'],
+  plugins: [
+    ['expo-build-properties', { android: { minSdkVersion: 24 } }],
+    'expo-secure-store',
+    'react-native-quick-crypto',
+  ],
   extra: {
     apiUrl,
   },

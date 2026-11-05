@@ -15,6 +15,14 @@ Offline-first Android app (iOS later) for the livestock/producer census of the M
 - Each census is sent only with its own user's token.
 - Census rules never go into the design system (`@molulabs/ds`).
 
+## Offline sign-in
+
+- An online sign-in keeps, per user, a PBKDF2-SHA256 verifier of the password (never the password) in SecureStore: `features/auth/offline/`. Signing out keeps it, so the user can sign in again without signal.
+- Sign-in tries the API first; only without signal or with the API failing (5xx) it checks the verifier. A 401 from the API is always a wrong password.
+- Offline sign-in is refused when: the user never signed in online on this phone, more than 7 days passed since the API last confirmed the account (an online sign-in, a token refresh or a successful `/me`), 5 wrong passwords in a row (an online sign-in unlocks), or the phone clock went back more than 10 minutes.
+- An offline session has no tokens: sending anything needs an online sign-in first.
+- PBKDF2 runs in native code with `react-native-quick-crypto` (`expo-crypto` has no key derivation). `PBKDF2_ITERATIONS` (310 000, ~150 ms on the emulator) still has to be measured on a low-end phone; each verifier keeps its own count, so it can be raised.
+
 ## Platform targets
 
 | Setting    | Value            | Where                                                              |

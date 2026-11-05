@@ -12,14 +12,21 @@ import {
 
 import { texts } from '@/src/shared/constants/texts';
 
-import { SignInError, type SignInErrorKind } from '../auth.model';
+import { SignInError } from '../auth.model';
 import { useSession } from '../session.store';
 import { initialValues, type LoginFormValues, validationSchema } from './login.schema';
 
+function signInErrorText(error: SignInError): string {
+  if (error.kind === 'offline_wrong_password') {
+    return texts.login.offlineWrongPassword(error.remainingAttempts ?? 0);
+  }
+  return texts.login.errors[error.kind];
+}
+
 export function LoginScreen() {
   const signIn = useSession((state) => state.signIn);
-  const expired = useSession((state) => state.expired);
-  const [signInError, setSignInError] = useState<SignInErrorKind | null>(null);
+  const signedOutReason = useSession((state) => state.signedOutReason);
+  const [signInError, setSignInError] = useState<SignInError | null>(null);
 
   const form = useFormik<LoginFormValues>({
     initialValues,
@@ -29,7 +36,7 @@ export function LoginScreen() {
       try {
         await signIn(email.trim(), password);
       } catch (error) {
-        setSignInError(error instanceof SignInError ? error.kind : 'server');
+        setSignInError(error instanceof SignInError ? error : new SignInError('server'));
       }
     },
   });
@@ -44,7 +51,9 @@ export function LoginScreen() {
     >
       <Text style={styles.title}>{texts.login.title}</Text>
 
-      {expired && !signInError && <Text style={styles.notice}>{texts.login.sessionExpired}</Text>}
+      {signedOutReason && !signInError && (
+        <Text style={styles.notice}>{texts.login.notices[signedOutReason]}</Text>
+      )}
 
       <View style={styles.field}>
         <Text style={styles.label}>{texts.login.email}</Text>
@@ -83,7 +92,7 @@ export function LoginScreen() {
         {passwordError && <Text style={styles.fieldError}>{passwordError}</Text>}
       </View>
 
-      {signInError && <Text style={styles.formError}>{texts.login.errors[signInError]}</Text>}
+      {signInError && <Text style={styles.formError}>{signInErrorText(signInError)}</Text>}
 
       <Pressable
         style={[styles.button, form.isSubmitting && styles.buttonDisabled]}
