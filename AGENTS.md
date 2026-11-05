@@ -18,12 +18,13 @@ pnpm start                  # start Metro for the development build
 pnpm android                # build and install the development build on the emulator/device
 pnpm lint                   # lint (ESLint + eslint-config-expo + prettier)
 pnpm typecheck              # tsc --noEmit
+pnpm test                   # jest (jest-expo + React Native Testing Library)
 pnpm format                 # prettier --write
 pnpm dlx expo-doctor        # diagnose dependency and config issues
 pnpm expo install --fix     # fix incompatible package versions
 ```
 
-Run lint, typecheck and format:check before declaring any task done.
+Run lint, typecheck, test and format:check before declaring any task done.
 
 ## Navigation & structure
 

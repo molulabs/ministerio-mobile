@@ -50,6 +50,7 @@ export function LoginScreen() {
         <Text style={styles.label}>{texts.login.email}</Text>
         <TextInput
           style={[styles.input, emailError && styles.inputError]}
+          accessibilityLabel={texts.login.email}
           value={form.values.email}
           onChangeText={form.handleChange('email')}
           onBlur={form.handleBlur('email')}
@@ -68,6 +69,7 @@ export function LoginScreen() {
         <Text style={styles.label}>{texts.login.password}</Text>
         <TextInput
           style={[styles.input, passwordError && styles.inputError]}
+          accessibilityLabel={texts.login.password}
           value={form.values.password}
           onChangeText={form.handleChange('password')}
           onBlur={form.handleBlur('password')}
@@ -85,6 +87,8 @@ export function LoginScreen() {
 
       <Pressable
         style={[styles.button, form.isSubmitting && styles.buttonDisabled]}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: form.isSubmitting }}
         onPress={() => form.handleSubmit()}
         disabled={form.isSubmitting}
       >

@@ -26,6 +26,15 @@ Offline-first Android app (iOS later) for the livestock/producer census of the M
 
 Change minSdk only in `app.json`, never in `android/`. The ministry's field phone models are not known yet; when they are, revisit minSdk and the low-end device used for the map spike.
 
+## Tests
+
+- Jest with the `jest-expo` preset and React Native Testing Library. Tests live in `src/__tests__/`, mirroring the path of the code they test (`src/__tests__/infrastructure/api/authRefresh.test.ts`).
+- RNTL v14: `render`, `fireEvent` and `act` are async — always `await` them.
+- Find elements as a user would: `getByLabelText`, `getByRole('button', { name })`, `getByText`. Give inputs an `accessibilityLabel` and pressables `accessibilityRole="button"`.
+- HTTP: give a fresh axios instance a fake `adapter` (see `authRefresh.test.ts`) instead of adding a mocking library.
+- Screen tests mock the session store, so the API client and SecureStore are never loaded.
+- TypeScript 6 includes no `@types/*` by default: global types are listed in `tsconfig.json` → `types`.
+
 ## Local development
 
 - Everything runs on the host (not in Docker), except the API.

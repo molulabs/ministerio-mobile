@@ -28,6 +28,8 @@ export function ProfileScreen({ firstname, lastname, email, onSignOut }: Profile
       <Text style={styles.detail}>{email}</Text>
       <Pressable
         style={[styles.button, signingOut && styles.buttonDisabled]}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: signingOut }}
         onPress={signOut}
         disabled={signingOut}
       >
