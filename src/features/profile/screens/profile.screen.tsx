@@ -9,6 +9,8 @@ interface ProfileScreenProps {
   email: string;
   /** The phone checked the password, without signal. */
   offline: boolean;
+  /** Epoch ms of the last finished sync, or null if it never ran. */
+  lastSyncAt: number | null;
   onSignOut: () => Promise<void>;
 }
 
@@ -18,6 +20,7 @@ export function ProfileScreen({
   lastname,
   email,
   offline,
+  lastSyncAt,
   onSignOut,
 }: ProfileScreenProps) {
   const [signingOut, setSigningOut] = useState(false);
@@ -35,6 +38,7 @@ export function ProfileScreen({
       </Text>
       <Text style={styles.detail}>{email}</Text>
       {offline && <Text style={styles.offline}>{texts.profile.offlineMode}</Text>}
+      <Text style={styles.lastSync}>{texts.profile.lastSync(lastSyncAt)}</Text>
       <Pressable
         style={[styles.button, signingOut && styles.buttonDisabled]}
         accessibilityRole="button"
@@ -76,6 +80,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     textAlign: 'center',
+  },
+  lastSync: {
+    marginTop: 16,
+    fontSize: 13,
+    color: '#666',
   },
   button: {
     marginTop: 24,

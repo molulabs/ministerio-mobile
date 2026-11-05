@@ -31,6 +31,11 @@ export const texts = {
         remainingAttempts === 1 ? 'queda 1 intento' : `quedan ${remainingAttempts} intentos`
       }.`,
   },
+  startup: {
+    failedTitle: 'La app no pudo arrancar',
+    failedText:
+      'No se pudo abrir la base de datos del teléfono. Los datos guardados no se borraron. Avisale a soporte.',
+  },
   tabs: {
     census: 'Censos',
     map: 'Mapa',
@@ -47,5 +52,9 @@ export const texts = {
     signOut: 'Salir',
     signingOut: 'Saliendo…',
     offlineMode: 'Sin conexión: entraste con los datos guardados en este teléfono.',
+    lastSync: (time: number | null) =>
+      time === null
+        ? 'Última sincronización: nunca'
+        : `Última sincronización: ${new Date(time).toLocaleString('es-AR')}`,
   },
 } as const;

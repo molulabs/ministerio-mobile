@@ -1,3 +1,5 @@
 ignoredBuiltDependencies:
-  # Ships prebuilt binaries (watcher-linux-x64-glibc); its build script is not needed
+  # Both ship prebuilt binaries (@parcel/watcher-linux-x64-glibc, @esbuild/linux-x64); their
+  # install scripts are not needed
   - '@parcel/watcher'
+  - esbuild

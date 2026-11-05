@@ -30,6 +30,16 @@ Offline-first Android app (iOS later) for the livestock/producer census of the M
 - An offline session has no tokens: sending anything needs an online sign-in first.
 - PBKDF2 runs in native code with `react-native-quick-crypto` (`expo-crypto` has no key derivation). `PBKDF2_ITERATIONS` (310 000, ~150 ms on the emulator) still has to be measured on a low-end phone; each verifier keeps its own count, so it can be raised.
 
+## Local database
+
+- SQLite (`expo-sqlite`) with Drizzle ORM, in `src/infrastructure/db/`: `schema.ts` (tables), `client.ts` (`openDatabase`, `getDatabase`), `migrations/` (generated, do not edit).
+- Encrypted with SQLCipher (`['expo-sqlite', { useSQLCipher: true }]` in `app.config.ts`). The 32-byte key is created on first start and kept in SecureStore (`db.encryptionKey`); it is never replaced, because a new key makes the existing file unreadable.
+- If the database cannot be opened, the app shows an error screen and deletes nothing.
+- Schema changes: edit `schema.ts`, then `pnpm db:generate --name <what_changed>`. Migrations are bundled as `.sql` (Babel `inline-import` + Metro `sourceExts`) and run at start-up, before navigation is shown.
+- `bootstrap()` opens the database before restoring the session; call `getDatabase()` only after that (it throws otherwise).
+- Screens get live data with `useLiveQuery` (the database is opened with `enableChangeListener`), e.g. `useSyncState` in `infrastructure/sync/syncState.ts`.
+- No census tables yet: only `sync_state` (key/value for the sync engine, e.g. `lastSyncAt`).
+
 ## Platform targets
 
 | Setting    | Value            | Where                                                              |
@@ -47,7 +57,7 @@ Change minSdk only in `app.json`, never in `android/`. The ministry's field phon
 - RNTL v14: `render`, `fireEvent` and `act` are async — always `await` them.
 - Find elements as a user would: `getByLabelText`, `getByRole('button', { name })`, `getByText`. Give inputs an `accessibilityLabel` and pressables `accessibilityRole="button"`.
 - HTTP: give a fresh axios instance a fake `adapter` (see `authRefresh.test.ts`) instead of adding a mocking library.
-- Screen tests mock the session store, so the API client and SecureStore are never loaded.
+- Screen tests mock the session store and `@/src/infrastructure/sync/syncState`, so the API client, SecureStore and SQLite are never loaded.
 - TypeScript 6 includes no `@types/*` by default: global types are listed in `tsconfig.json` → `types`.
 
 ## Local development
@@ -61,4 +71,4 @@ Change minSdk only in `app.json`, never in `android/`. The ministry's field phon
 - Emulator: `emulator -avd Medium_Phone_API_37.0 -gpu swiftshader_indirect` (software rendering). On this machine both `auto` and `host` GPU modes crashed the API 37 emulator.
 - Do not start Metro with `CI=1`: it disables watch mode and hot reload.
 - Do not run pnpm commands while a native build (`pnpm android`) runs: once `node_modules/.bin` was rewritten mid-build and Gradle failed on a missing intermediate file. `pnpm install --offline` relinks the bins.
-- `android/` and `ios/` are generated (CNG) and git-ignored.
+- `android/` and `ios/` are generated (CNG) and git-ignored. `pnpm android` does not regenerate an existing `android/`: after changing plugins in `app.config.ts`, run `pnpm expo prebuild --platform android --no-install` first (the `useSQLCipher` change was silently ignored until then). Check SQLCipher with the database header: `adb exec-out run-as com.molulabs.censo cat files/SQLite/censo.db | head -c 16` must not read `SQLite format 3`.

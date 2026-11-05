@@ -4,17 +4,19 @@ import { useSession } from '@/src/features/auth/session.store';
 import { CensusListScreen } from '@/src/features/census/screens/census-list.screen';
 import { MapScreen } from '@/src/features/maps/screens/map.screen';
 import { ProfileScreen } from '@/src/features/profile/screens/profile.screen';
+import { syncKeys, useSyncState } from '@/src/infrastructure/sync/syncState';
 import { texts } from '@/src/shared/constants/texts';
 
 import type { MainTabsParamList } from './routes';
 
 const Tab = createBottomTabNavigator<MainTabsParamList>();
 
-/** Features do not import each other: the profile gets the session user from here. */
+/** Features do not import each other: the profile gets the session user and sync state from here. */
 function ProfileTab() {
   const user = useSession((state) => state.user);
   const mode = useSession((state) => state.mode);
   const signOut = useSession((state) => state.signOut);
+  const lastSyncAt = useSyncState(syncKeys.lastSyncAt);
   if (!user) return null;
   return (
     <ProfileScreen
@@ -22,6 +24,7 @@ function ProfileTab() {
       lastname={user.lastname}
       email={user.email}
       offline={mode === 'offline'}
+      lastSyncAt={lastSyncAt === null ? null : Number(lastSyncAt)}
       onSignOut={signOut}
     />
   );

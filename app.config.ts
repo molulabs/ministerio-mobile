@@ -39,6 +39,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ['expo-build-properties', { android: { minSdkVersion: 24 } }],
     'expo-secure-store',
     'react-native-quick-crypto',
+    // The local database holds producers' personal data: encrypted with SQLCipher.
+    ['expo-sqlite', { useSQLCipher: true }],
   ],
   extra: {
     apiUrl,

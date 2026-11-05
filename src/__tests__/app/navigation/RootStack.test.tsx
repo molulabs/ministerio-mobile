@@ -18,6 +18,12 @@ jest.mock('@/src/features/auth/session.store', () => ({
   useSession: (select: (state: MockState) => unknown) => select(mockState),
 }));
 
+// The tabs read the sync state from the local database, which tests do not open.
+jest.mock('@/src/infrastructure/sync/syncState', () => ({
+  syncKeys: { lastSyncAt: 'lastSyncAt' },
+  useSyncState: () => null,
+}));
+
 const rosa = { firstname: 'Rosa', lastname: 'Mendieta', email: 'rosa@company.com' };
 
 function renderNavigation() {
