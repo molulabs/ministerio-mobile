@@ -1,6 +1,7 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { AlertBanner, EmptyState } from '@molulabs/ds';
 
 import { texts } from '@/src/shared/constants/texts';
+import { Screen } from '@/src/shared/ui/Screen';
 
 type Props = {
   firstname: string;
@@ -14,44 +15,15 @@ type Props = {
  */
 export function HomeScreen({ firstname, offlineDataMissing }: Props) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{texts.home.welcome(firstname)}</Text>
-      <Text style={styles.text}>{texts.home.empty}</Text>
+    <Screen centered>
+      <EmptyState icon="ti-mood-smile" title={texts.home.welcome(firstname)}>
+        {texts.home.empty}
+      </EmptyState>
       {offlineDataMissing && (
-        <Text style={styles.notice} accessibilityRole="alert">
+        <AlertBanner tone="warning" title={texts.home.offlineDataMissingTitle}>
           {texts.home.offlineDataMissing}
-        </Text>
+        </AlertBanner>
       )}
-    </View>
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    gap: 12,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '600',
-    color: '#222',
-  },
-  text: {
-    fontSize: 15,
-    color: '#555',
-    textAlign: 'center',
-  },
-  notice: {
-    marginTop: 16,
-    fontSize: 14,
-    color: '#9a6700',
-    backgroundColor: '#fff8c5',
-    borderRadius: 8,
-    padding: 12,
-    textAlign: 'center',
-  },
-});

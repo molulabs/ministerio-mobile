@@ -1,16 +1,12 @@
+import { AlertBanner, Button } from '@molulabs/ds';
 import { useFormik } from 'formik';
 import { useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { KeyboardAvoidingView, Platform } from 'react-native';
 
 import { texts } from '@/src/shared/constants/texts';
+import { Screen } from '@/src/shared/ui/Screen';
+import { Text } from '@/src/shared/ui/Text';
+import { TextField } from '@/src/shared/ui/TextField';
 
 import { SignInError } from '../auth.model';
 import { useSession } from '../session.store';
@@ -46,127 +42,51 @@ export function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <Text style={styles.title}>{texts.login.title}</Text>
+      <Screen centered scroll>
+        <Text variant="title">{texts.login.title}</Text>
 
-      {signedOutReason && !signInError && (
-        <Text style={styles.notice}>{texts.login.notices[signedOutReason]}</Text>
-      )}
+        {signedOutReason && !signInError && (
+          <AlertBanner tone="warning" title={texts.login.notices[signedOutReason]} />
+        )}
 
-      <View style={styles.field}>
-        <Text style={styles.label}>{texts.login.email}</Text>
-        <TextInput
-          style={[styles.input, emailError && styles.inputError]}
-          accessibilityLabel={texts.login.email}
+        <TextField
+          label={texts.login.email}
+          type="email"
+          error={emailError}
           value={form.values.email}
           onChangeText={form.handleChange('email')}
           onBlur={form.handleBlur('email')}
-          autoCapitalize="none"
           autoComplete="email"
-          autoCorrect={false}
-          keyboardType="email-address"
           textContentType="username"
           returnKeyType="next"
-          editable={!form.isSubmitting}
+          disabled={form.isSubmitting}
         />
-        {emailError && <Text style={styles.fieldError}>{emailError}</Text>}
-      </View>
 
-      <View style={styles.field}>
-        <Text style={styles.label}>{texts.login.password}</Text>
-        <TextInput
-          style={[styles.input, passwordError && styles.inputError]}
-          accessibilityLabel={texts.login.password}
+        <TextField
+          label={texts.login.password}
+          type="password"
+          error={passwordError}
           value={form.values.password}
           onChangeText={form.handleChange('password')}
           onBlur={form.handleBlur('password')}
-          secureTextEntry
           autoComplete="current-password"
           textContentType="password"
           returnKeyType="go"
           onSubmitEditing={() => form.handleSubmit()}
-          editable={!form.isSubmitting}
+          disabled={form.isSubmitting}
         />
-        {passwordError && <Text style={styles.fieldError}>{passwordError}</Text>}
-      </View>
 
-      {signInError && <Text style={styles.formError}>{signInErrorText(signInError)}</Text>}
+        {signInError && (
+          <AlertBanner title={texts.login.failed}>{signInErrorText(signInError)}</AlertBanner>
+        )}
 
-      <Pressable
-        style={[styles.button, form.isSubmitting && styles.buttonDisabled]}
-        accessibilityRole="button"
-        accessibilityState={{ disabled: form.isSubmitting }}
-        onPress={() => form.handleSubmit()}
-        disabled={form.isSubmitting}
-      >
-        <Text style={styles.buttonText}>
+        <Button size="lg" disabled={form.isSubmitting} onClick={() => form.handleSubmit()}>
           {form.isSubmitting ? texts.login.submitting : texts.login.submit}
-        </Text>
-      </Pressable>
+        </Button>
+      </Screen>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    gap: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  notice: {
-    fontSize: 14,
-    color: '#9a6700',
-    backgroundColor: '#fff8c5',
-    borderRadius: 8,
-    padding: 12,
-  },
-  field: {
-    gap: 4,
-  },
-  label: {
-    fontSize: 14,
-    color: '#333',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-  },
-  inputError: {
-    borderColor: '#cf222e',
-  },
-  fieldError: {
-    fontSize: 13,
-    color: '#cf222e',
-  },
-  formError: {
-    fontSize: 14,
-    color: '#cf222e',
-  },
-  button: {
-    backgroundColor: '#0969da',
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

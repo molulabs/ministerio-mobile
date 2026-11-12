@@ -6,6 +6,7 @@ export const texts = {
     password: 'Contraseña',
     submit: 'Entrar',
     submitting: 'Entrando…',
+    failed: 'No se pudo iniciar sesión',
     emailInvalid: 'Ingresá un email válido',
     emailRequired: 'El email es obligatorio',
     passwordRequired: 'La contraseña es obligatoria',
@@ -45,10 +46,11 @@ export const texts = {
   home: {
     welcome: (firstname: string) => `¡Hola, ${firstname}!`,
     empty: 'Elegí una pestaña para empezar.',
-    offlineDataMissing:
-      'Todavía no se descargaron los datos para trabajar sin conexión. Conectate a internet antes de salir.',
+    offlineDataMissingTitle: 'Faltan los datos para trabajar sin conexión',
+    offlineDataMissing: 'Conectate a internet antes de salir para descargarlos.',
   },
   census: {
+    emptyTitle: 'Todavía no hay censos',
     empty: 'Acá vas a ver tus censos: borradores, pendientes de envío, enviados y a corregir.',
   },
   map: {
@@ -78,10 +80,12 @@ export const texts = {
     greeting: (firstname: string) => `Hola, ${firstname}`,
     signOut: 'Cerrar sesión',
     signingOut: 'Cerrando sesión…',
-    offlineMode: 'Sin conexión: entraste con los datos guardados en este teléfono.',
-    lastSync: (time: number | null) =>
-      time === null
-        ? 'Última sincronización: nunca'
-        : `Última sincronización: ${new Date(time).toLocaleString('es-AR')}`,
+    offlineTitle: 'Sin conexión',
+    offlineMode: 'Entraste con los datos guardados en este teléfono.',
+    name: 'Nombre',
+    email: 'Email',
+    lastSync: 'Última sincronización',
+    lastSyncValue: (time: number | null) =>
+      time === null ? 'Nunca' : new Date(time).toLocaleString('es-AR'),
   },
 } as const;

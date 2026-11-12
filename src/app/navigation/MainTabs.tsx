@@ -8,6 +8,7 @@ import { ProfileScreen } from '@/src/features/profile/screens/profile.screen';
 import { syncKeys, useSyncState } from '@/src/infrastructure/sync/syncState';
 import { texts } from '@/src/shared/constants/texts';
 
+import { AppHeader, AppTabBar } from './AppTabBar';
 import type { MainTabsParamList } from './routes';
 
 const Tab = createBottomTabNavigator<MainTabsParamList>();
@@ -43,12 +44,8 @@ export function MainTabs() {
   return (
     <Tab.Navigator
       backBehavior="firstRoute"
-      screenOptions={{
-        // No icon set yet: the tabs show their label only.
-        tabBarIcon: () => null,
-        tabBarIconStyle: { display: 'none' },
-        tabBarLabelStyle: { fontSize: 15 },
-      }}
+      tabBar={(props) => <AppTabBar {...props} />}
+      screenOptions={{ header: (props) => <AppHeader {...props} /> }}
     >
       {/* First tab, so the app opens here. Revisit when the census list exists. */}
       <Tab.Screen name="Home" component={HomeTab} options={{ title: texts.tabs.home }} />
