@@ -47,3 +47,25 @@ export const producerIndex = sqliteTable('producer_index', {
   documentNumber: text('document_number').primaryKey(),
   fullName: text('full_name').notNull(),
 });
+
+/*
+ * Offline map: the packages installed on the phone, all complete and checked. Only the maps
+ * puller writes it, replacing the table whole once every file of the manifest is in place.
+ */
+export const mapPackages = sqliteTable('map_packages', {
+  id: text('id').primaryKey(),
+  /** raster, vector or style. */
+  kind: text('kind').notNull(),
+  version: text('version').notNull(),
+  /** Name in the maps directory: the .pmtiles file, or the directory the style was unzipped to. */
+  name: text('name').notNull(),
+  /** west, south, east, north (tile packages). */
+  bounds: text('bounds', { mode: 'json' }).$type<[number, number, number, number]>(),
+  minzoom: integer('minzoom'),
+  maxzoom: integer('maxzoom'),
+  /** Shown on the map, as the licence of the data asks. */
+  attribution: text('attribution'),
+  /** Ids of the packages the style reads (style only). */
+  requires: text('requires', { mode: 'json' }).$type<string[]>(),
+  installedAt: integer('installed_at', { mode: 'timestamp_ms' }).notNull(),
+});

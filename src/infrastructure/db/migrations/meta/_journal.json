@@ -15,6 +15,13 @@
       "when": 1793846517666,
       "tag": "0001_create_catalogs",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794515434077,
+      "tag": "0002_create_map_packages",
+      "breakpoints": true
     }
   ]
 }

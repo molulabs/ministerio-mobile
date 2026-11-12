@@ -41,6 +41,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'react-native-quick-crypto',
     // The local database holds producers' personal data: encrypted with SQLCipher.
     ['expo-sqlite', { useSQLCipher: true }],
+    // Google Play Services location: asks the GPS at high accuracy, which the field needs (with
+    // no cell or WiFi around, the default engine's balanced request may not turn the GPS on).
+    ['@maplibre/maplibre-react-native', { android: { locationEngine: 'google' } }],
   ],
   extra: {
     apiUrl,

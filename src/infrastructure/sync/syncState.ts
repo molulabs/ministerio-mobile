@@ -12,6 +12,8 @@ export const syncKeys = {
   catalogsSyncedAt: 'catalogsSyncedAt',
   /** ETag of the catalogs saved on the phone. */
   catalogsEtag: 'catalogsEtag',
+  /** ETag of the map manifest whose packages are all installed. */
+  mapsEtag: 'mapsEtag',
 } as const;
 
 export type SyncKey = (typeof syncKeys)[keyof typeof syncKeys];

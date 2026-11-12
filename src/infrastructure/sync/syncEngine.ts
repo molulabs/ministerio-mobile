@@ -5,6 +5,8 @@ type Deps = {
   /** False without an online session (an offline sign-in has no tokens): nothing is sent. */
   canSync: () => boolean;
   pullCatalogs: () => Promise<unknown>;
+  /** Runs last: downloading the map can take minutes, and nothing else waits behind it. */
+  pullMaps: () => Promise<unknown>;
   /** When the catalogs were last synced, or null if they were never downloaded. */
   catalogsSyncedAt: () => Promise<number | null>;
   /** Automatic triggers do not pull the catalogs again within this time. */
@@ -25,6 +27,7 @@ type SyncOptions = {
 export function createSyncEngine({
   canSync,
   pullCatalogs,
+  pullMaps,
   catalogsSyncedAt,
   minIntervalMs,
   now = Date.now,
@@ -38,6 +41,7 @@ export function createSyncEngine({
         if (last !== null && now() - last < minIntervalMs) return 'recent';
       }
       await pullCatalogs();
+      await pullMaps();
       return 'done';
     } catch {
       return 'failed';

@@ -52,7 +52,27 @@ export const texts = {
     empty: 'Acá vas a ver tus censos: borradores, pendientes de envío, enviados y a corregir.',
   },
   map: {
-    empty: 'Acá va a estar el mapa de Jujuy, disponible sin conexión.',
+    notDownloaded:
+      'El mapa de Jujuy todavía no se descargó. Se descarga solo, con WiFi y la sesión iniciada con conexión.',
+    downloading: (percent: number) => `Descargando el mapa de Jujuy… ${percent}%`,
+    unreadable: 'No se pudo abrir el mapa descargado.',
+    zoomIn: 'Acercar',
+    zoomOut: 'Alejar',
+    showJujuy: 'Ver toda la provincia',
+    myLocation: 'Mi ubicación',
+    myPosition: 'Tu ubicación',
+    pickedPoint: 'Punto marcado',
+    latitude: 'Latitud',
+    longitude: 'Longitud',
+    accuracy: 'Precisión',
+    copy: 'Copiar coordenadas',
+    copied: 'Copiado',
+    closeCoordinates: 'Cerrar coordenadas',
+    searchingLocation: 'Buscando tu ubicación…',
+    outsideMap: 'Tu ubicación está fuera del mapa de Jujuy.',
+    noLocation: 'Todavía no hay señal de GPS. Probá de nuevo en un momento, al aire libre.',
+    locationDenied:
+      'Sin permiso de ubicación no se puede mostrar dónde estás. Podés darlo en los ajustes del teléfono.',
   },
   profile: {
     greeting: (firstname: string) => `Hola, ${firstname}`,

@@ -1,10 +1,15 @@
+import { getNetworkStateAsync, NetworkStateType } from 'expo-network';
 import { AppState } from 'react-native';
 
 import { useSession } from '@/src/features/auth/session.store';
-import { apiClient } from '@/src/infrastructure/api/client';
+import { apiClient, apiUrl } from '@/src/infrastructure/api/client';
+import { mapFiles } from '@/src/infrastructure/maps/mapFiles';
 import { onStableSignal } from '@/src/infrastructure/network/network.monitor';
 import { createCatalogsPuller } from '@/src/infrastructure/sync/catalogs.puller';
 import { catalogsStore } from '@/src/infrastructure/sync/catalogs.store';
+import { setMapDownloadProgress } from '@/src/infrastructure/sync/mapDownload.store';
+import { createMapsPuller } from '@/src/infrastructure/sync/maps.puller';
+import { mapsStore } from '@/src/infrastructure/sync/maps.store';
 import { createSyncEngine } from '@/src/infrastructure/sync/syncEngine';
 
 /** Automatic triggers do not pull the catalogs again within this time. */
@@ -27,6 +32,17 @@ export function startSync(): () => void {
   const engine = createSyncEngine({
     canSync: () => isOnlineSession(useSession.getState()),
     pullCatalogs: createCatalogsPuller({ http: apiClient, store: catalogsStore }),
+    pullMaps: createMapsPuller({
+      http: apiClient,
+      store: mapsStore,
+      files: mapFiles,
+      apiOrigin: apiUrl,
+      isUnmetered: async () => {
+        const { type } = await getNetworkStateAsync();
+        return type === NetworkStateType.WIFI || type === NetworkStateType.ETHERNET;
+      },
+      onProgress: setMapDownloadProgress,
+    }),
     catalogsSyncedAt: catalogsStore.syncedAt,
     minIntervalMs: SYNC_MIN_INTERVAL_MS,
   });

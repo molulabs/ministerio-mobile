@@ -26,6 +26,12 @@ jest.mock('@/src/infrastructure/sync/syncState', () => ({
   useSyncState: (key: string) => mockSyncState[key] ?? null,
 }));
 
+// The map is native (MapLibre) and reads its packages from the database: none installed here.
+jest.mock('@maplibre/maplibre-react-native', () => ({}));
+jest.mock('@/src/features/maps/useOfflineMap', () => ({
+  useOfflineMap: () => ({ map: null, error: false }),
+}));
+
 const rosa = { firstname: 'Rosa', lastname: 'Mendieta', email: 'rosa@company.com' };
 
 function renderNavigation() {

@@ -3,7 +3,8 @@ import Constants from 'expo-constants';
 
 import { type AuthRefreshHandlers, installAuthRefresh } from './authRefresh';
 
-const apiUrl: string = Constants.expoConfig?.extra?.apiUrl;
+/** The API host, as API_URL gives it (no /api). */
+export const apiUrl: string = Constants.expoConfig?.extra?.apiUrl;
 
 if (!apiUrl) {
   throw new Error('apiUrl is missing from the app config (app.config.ts → extra.apiUrl)');

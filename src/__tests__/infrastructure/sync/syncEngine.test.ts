@@ -6,15 +6,17 @@ function setup({
   canSync = true,
   syncedAt = null as number | null,
   pullCatalogs = jest.fn(async () => undefined) as jest.Mock<Promise<unknown>, []>,
+  pullMaps = jest.fn(async () => undefined) as jest.Mock<Promise<unknown>, []>,
 } = {}) {
   const engine = createSyncEngine({
     canSync: () => canSync,
     pullCatalogs,
+    pullMaps,
     catalogsSyncedAt: async () => syncedAt,
     minIntervalMs: 15 * MINUTE,
     now: () => 100 * MINUTE,
   });
-  return { engine, pullCatalogs };
+  return { engine, pullCatalogs, pullMaps };
 }
 
 describe('syncEngine', () => {
@@ -30,6 +32,30 @@ describe('syncEngine', () => {
     const { engine, pullCatalogs } = setup();
 
     await expect(engine.syncNow()).resolves.toBe('done');
+
+    expect(pullCatalogs).toHaveBeenCalledTimes(1);
+  });
+
+  it('pulls the map after the catalogs', async () => {
+    const order: string[] = [];
+    const { engine } = setup({
+      pullCatalogs: jest.fn(async () => order.push('catalogs')),
+      pullMaps: jest.fn(async () => order.push('maps')),
+    });
+
+    await expect(engine.syncNow()).resolves.toBe('done');
+
+    expect(order).toEqual(['catalogs', 'maps']);
+  });
+
+  it('fails when the map fails, keeping the catalogs already pulled', async () => {
+    const { engine, pullCatalogs } = setup({
+      pullMaps: jest.fn(async () => {
+        throw new Error('cut');
+      }),
+    });
+
+    await expect(engine.syncNow()).resolves.toBe('failed');
 
     expect(pullCatalogs).toHaveBeenCalledTimes(1);
   });
