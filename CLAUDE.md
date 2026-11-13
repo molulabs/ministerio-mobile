@@ -7,6 +7,7 @@ Offline-first Android app (iOS later) for the livestock/producer census of the M
 - Plan: https://claude.ai/artifact/7Wky6z823sxr2X6eubfEPH — read it before starting a new phase.
 - Sibling repos in `../`: `api/` (Symfony, JWT via `/api/login` + `/api/refresh`), `app/` (web, React + Formik/Yup), `infra/` (Docker Compose + nginx).
 - Mobile API lives under `/api/mobile/` (`GET catalogs` with ETag, idempotent `PUT census-submissions/{uuid}`).
+- A census is of one farm of its producer, and the API decides which one when it accepts the submission (`schemaVersion` 2). It never asks the phone. The farm data (RENSPA, coordinates, whether the producer lives there) goes in `productionUnit`. The census form needs an "Es otra finca del productor" checkbox, sent as `newFarm: true`. Whatever the API cannot tell apart is flagged for review on the web. A 409 is never retried: the census stays as `anomaly` on the phone (see Census outbox). Rules: `../api/CLAUDE.md` → Farms.
 
 ## Core rules (from the plan)
 
@@ -18,10 +19,11 @@ Offline-first Android app (iOS later) for the livestock/producer census of the M
 
 ## Navigation
 
-- React Navigation 7 in `src/app/navigation/`: `RootStack` (native stack) shows `Login` when signed out and `Main` (bottom tabs: Inicio · Censos · Mapa · Perfil; the app opens on Inicio until the census list exists) when signed in. The session decides which screens exist, so the back button never crosses between them; nobody calls `navigate` to sign in or out.
+- React Navigation 7 in `src/app/navigation/`: `RootStack` (native stack) shows `Login` when signed out and `Main` (bottom tabs: Inicio · Censos · Mapa · Perfil) when signed in. The app opens on Censos (`initialRouteName`), and Android's back button returns there from any tab (`backBehavior="initialRoute"`). The session decides which screens exist, so the back button never crosses between them; nobody calls `navigate` to sign in or out.
 - Route names and params are typed in `routes.ts` (global `ReactNavigation.RootParamList`).
 - Screens live in their feature; `src/app/navigation/` wires them and passes what crosses features as props (e.g. the profile tab gets the session user).
-- Tabs show labels only until there is an icon set.
+- The tab bar and the top bar are the design system's (`AppTabBar.tsx`, icons in `TAB_ICONS`). The Censos tab shows the user's unsent censuses as a badge. The top bar's second line says why the phone cannot send, and only then: "Sin conexión" (no signal) or "Sesión sin conexión" (offline sign-in).
+- Signing out with unsent censuses asks first (Perfil): they stay on the phone, but only their owner can send them.
 
 ## Offline sign-in
 
@@ -39,27 +41,51 @@ Offline-first Android app (iOS later) for the livestock/producer census of the M
 - Schema changes: edit `schema.ts`, then `pnpm db:generate --name <what_changed>`. Migrations are bundled as `.sql` (Babel `inline-import` + Metro `sourceExts`) and run at start-up, before navigation is shown.
 - `bootstrap()` opens the database before restoring the session; call `getDatabase()` only after that (it throws otherwise).
 - Screens get live data with `useLiveQuery` (the database is opened with `enableChangeListener`), e.g. `useSyncState` in `infrastructure/sync/syncState.ts`.
-- No census tables yet. `sync_state` is key/value for the sync engine (`lastSyncAt`, `catalogsEtag`); the catalog tables (`localities`, `livestock_breeds`, `forest_species`, `producer_index`) are written only by the catalogs puller.
+- `censuses`: one row per census, id UUID v7 (made on the phone, the order of the ids is the order of the censuses), `userId`, `payload` (JSON, the API's submission body), `status` (`draft` | `ready` | `sent` | `in_review` | `needs_fix` | `anomaly`), and what the API answered (`errors`, `conflict`, `censusId`). Screens read it through `features/census/census.repository.ts`; only the outbox store changes the status of a census.
+- `sync_state` is key/value for the sync engine (`lastSyncAt`, `catalogsEtag`); the catalog tables (`localities`, `livestock_breeds`, `forest_species`, `producer_index`) are written only by the catalogs puller. `lastSyncAt` is the last catalogs check: sending censuses does not move it (Perfil shows it as "Datos actualizados").
 
 ## Sync
 
 - Only the sync engine talks to the API (besides sign-in). `src/app/sync.ts` wires it to its triggers: start-up, an online sign-in, the signal coming back and the app coming back to the front. It does nothing without an online session (an offline sign-in has no tokens).
-- One sync at a time: a trigger that arrives while one runs joins it. A failure keeps what the phone has and waits for the next trigger; there is no retry loop.
-- Automatic triggers skip the sync when the catalogs were synced less than 15 minutes ago (`SYNC_MIN_INTERVAL_MS`). An online sign-in always syncs (`force`).
+- Every trigger sends the ready censuses first, then pulls the catalogs and the maps. One sync at a time: a trigger that arrives while one runs joins it. A failure keeps what the phone has and waits for the next trigger; there is no retry loop.
+- Automatic triggers skip the catalogs and the maps when the catalogs were synced less than 15 minutes ago (`SYNC_MIN_INTERVAL_MS`); the censuses are sent anyway. An online sign-in always syncs (`force`).
 - Catalogs (`infrastructure/sync/catalogs.puller.ts`): `GET /api/mobile/catalogs` with the saved ETag. A 304 only updates `catalogsSyncedAt` and `lastSyncAt`; a 200 is checked and then replaces every catalog, the ETag and both sync times in one transaction. A bad body or a failed request never touches the saved catalogs.
 - Signal (`infrastructure/network/network.monitor.ts`, `expo-network`): Android repeats the network event every ~3 s without changes, so only the no-signal → signal transition counts, and the signal must then hold 30 s (`STABLE_SIGNAL_MS`) before a sync; a cut in between cancels it.
-- No generic task queue: censuses will be queued in the outbox (SQLite), and catalogs only need single-flight plus the interval.
+- No generic task queue: the censuses are queued in SQLite (the outbox), and catalogs only need single-flight plus the interval.
+
+## Census outbox
+
+- `infrastructure/sync/outbox.sender.ts` sends the `ready` censuses of the signed-in user with an online session, oldest first, one at a time: `PUT /api/mobile/census-submissions/{id}`, 30 s timeout. Each census goes only with its own user's token; an offline session sends nothing.
+- Answers: 201 → `sent`; 202 → `in_review` (`conflict` says what the office must check); 422 → `needs_fix` (`errors`, one per field); 409 → `anomaly`, **never retried** (the API has another census under that id, or refused it for a clash); 401 stops the run without counting an attempt; any other 4xx waits and the run goes on; no signal or 5xx waits and the run stops. Waiting is a backoff of 1, 2, 4… minutes, up to 30.
+- A sent payload never changes: the API answers a repeated PUT only when the body is the same, and 409 otherwise.
+- `outbox.store.ts` only changes rows still `ready`, so a late answer never overwrites an earlier one.
+- `sendNow` has its own serial queue, so the "Enviar censos" button does not wait for a map download. `src/app/sync.ts` exports `sendCensusesNow()` (forced: it ignores the backoff).
+- The Censos tab (`features/census/screens/census-list.screen.tsx`) lists the user's censuses live, grouped as Para revisar (`needs_fix`, `anomaly`), Pendientes de envío (`ready`) and Enviados (`sent`, `in_review`); tapping one the API answered opens what it said. Drafts are not listed until the census form exists.
+- Unsent = `draft` + `ready` + `needs_fix` (the badge and the sign-out warning). An `anomaly` is not counted: the phone can do nothing more with it.
+- Development builds have a "Crear censo de prueba" button (`__DEV__` only) that saves a made-up census (`features/census/testCensus.ts`, DNI 99000001) ready to send.
+
+## Design system
+
+- `@molulabs/ds` (GitHub tag in `package.json`), theme `senal`, as the ministry's web. Its components are native but typed with web props: `onClick` is `onPress`, and `src/shared/ui/` (`Screen`, `Text`, `TextField`) adapts what screens need.
+- Toasts: `useToasts().push(tone, title, message)`. They are drawn above the tab bar: `AppTabBar` measures itself into `tabBarHeight.ts`.
+- Branding: the "CP" mark on the accent of `senal` (`#0E7282`) for the launcher icon, the Jujuy logo on the splash and the login.
 
 ## Platform targets
 
-| Setting    | Value            | Where                                                              |
-| ---------- | ---------------- | ------------------------------------------------------------------ |
-| Expo SDK   | 58               | `package.json`                                                     |
-| minSdk     | 24 (Android 7.0) | pinned in `app.json` → `expo-build-properties`; decided 2026-11-04 |
-| targetSdk  | 36 (Android 16)  | Expo SDK 58 default                                                |
-| compileSdk | 37 (Android 17)  | Expo SDK 58 default                                                |
+| Setting    | Value            | Where                                                                   |
+| ---------- | ---------------- | ----------------------------------------------------------------------- |
+| Expo SDK   | 58               | `package.json`                                                          |
+| minSdk     | 24 (Android 7.0) | pinned in `app.config.ts` → `expo-build-properties`; decided 2026-11-04 |
+| targetSdk  | 36 (Android 16)  | Expo SDK 58 default                                                     |
+| compileSdk | 37 (Android 17)  | Expo SDK 58 default                                                     |
 
-Change minSdk only in `app.json`, never in `android/`. The ministry's field phone models are not known yet; when they are, revisit minSdk and the low-end device used for the map spike.
+Change minSdk only in `app.config.ts`, never in `android/`. The ministry's field phone models are not known yet; when they are, revisit minSdk and the low-end device used for the map spike.
+
+## Releases
+
+- EAS (`eas.json`), project `censo-scad-jujuy`. Profiles: `development` (dev client, local API), `preview` (APK for the field phones, production API), `production` (AAB for Google Play, later). Version codes are kept by EAS (`appVersionSource: remote`); `version` in `app.config.ts` is raised by hand.
+- An `env` value in a build profile wins over the committed `.env`.
+- OTA updates (EAS Update) are not set up yet. When they are, they need a fixed `runtimeVersion`: the SQLite migrations ship in the JS.
 
 ## Tests
 
@@ -67,7 +93,7 @@ Change minSdk only in `app.json`, never in `android/`. The ministry's field phon
 - RNTL v14: `render`, `fireEvent` and `act` are async — always `await` them.
 - Find elements as a user would: `getByLabelText`, `getByRole('button', { name })`, `getByText`. Give inputs an `accessibilityLabel` and pressables `accessibilityRole="button"`.
 - HTTP: give a fresh axios instance a fake `adapter` (see `authRefresh.test.ts`) instead of adding a mocking library.
-- Screen tests mock the session store and `@/src/infrastructure/sync/syncState`, so the API client, SecureStore and SQLite are never loaded.
+- Screen tests mock the session store, `@/src/infrastructure/sync/syncState`, `@/src/features/census/census.repository` and `@/src/infrastructure/network/network.monitor`, so the API client, SecureStore and SQLite are never loaded. Screens that push toasts render inside `ToastProvider`.
 - TypeScript 6 includes no `@types/*` by default: global types are listed in `tsconfig.json` → `types`.
 
 ## Local development
