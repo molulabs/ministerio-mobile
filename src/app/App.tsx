@@ -11,6 +11,7 @@ import { texts } from '@/src/shared/constants/texts';
 
 import { bootstrap } from './bootstrap';
 import { RootStack } from './navigation/RootStack';
+import { useTabBarHeight } from './navigation/tabBarHeight';
 
 type Startup = { state: 'starting' } | { state: 'ready' } | { state: 'failed'; detail: string };
 
@@ -27,10 +28,13 @@ function DesignSystem({ children }: { children: ReactNode }) {
   );
 }
 
-/** The toasts of every screen, above the gesture bar. */
+/** The toasts of every screen, above the tab bar when there is one, else above the gesture bar. */
 function Toasts({ bottom, children }: { bottom: number; children: ReactNode }) {
   const t = useTokens();
-  return <ToastProvider stackStyle={{ bottom: bottom + t.space7 }}>{children}</ToastProvider>;
+  // The tab bar already pads the gesture bar: its height includes the inset.
+  const tabBarHeight = useTabBarHeight((store) => store.height);
+  const clearance = tabBarHeight > 0 ? tabBarHeight : bottom;
+  return <ToastProvider stackStyle={{ bottom: clearance + t.space7 }}>{children}</ToastProvider>;
 }
 
 export default function App() {

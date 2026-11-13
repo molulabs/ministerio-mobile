@@ -1,7 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import { useSession } from '@/src/features/auth/session.store';
-import { saveReadyCensus } from '@/src/features/census/census.repository';
+import { saveReadyCensus, useCensuses } from '@/src/features/census/census.repository';
 import { CensusListScreen } from '@/src/features/census/screens/census-list.screen';
 import { testCensusPayload } from '@/src/features/census/testCensus';
 import { HomeScreen } from '@/src/features/home/screens/home.screen';
@@ -26,12 +26,24 @@ function HomeTab() {
 
 function CensusTab() {
   const userId = useSession((state) => state.user?.id);
+  if (userId === undefined) return null;
+  return <UserCensuses userId={userId} />;
+}
+
+/** The census list of the signed-in user: a census is only ever shown to whoever took it. */
+function UserCensuses({ userId }: { userId: number }) {
+  const censuses = useCensuses(userId);
   // Only in development builds: a release build never makes made-up censuses.
-  const createTestCensus =
-    __DEV__ && userId !== undefined
-      ? async () => void (await saveReadyCensus(userId, testCensusPayload()))
-      : undefined;
-  return <CensusListScreen onSend={sendCensusesNow} onCreateTestCensus={createTestCensus} />;
+  const createTestCensus = __DEV__
+    ? async () => void (await saveReadyCensus(userId, testCensusPayload()))
+    : undefined;
+  return (
+    <CensusListScreen
+      censuses={censuses}
+      onSend={sendCensusesNow}
+      onCreateTestCensus={createTestCensus}
+    />
+  );
 }
 
 /** Features do not import each other: the profile gets the session user and sync state from here. */

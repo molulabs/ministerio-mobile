@@ -54,6 +54,29 @@ export const texts = {
   },
   census: {
     emptyTitle: 'Todavía no hay censos',
+    list: {
+      sections: {
+        toCheck: 'Para revisar',
+        pending: 'Pendientes de envío',
+        sent: 'Enviados',
+      },
+      status: {
+        ready: 'Pendiente',
+        sent: 'Enviado',
+        in_review: 'En revisión',
+        needs_fix: 'A corregir',
+        anomaly: 'No registrado',
+      },
+      noProducer: 'Productor sin nombre',
+      close: 'Cerrar',
+      needsFixTitle: 'Datos para corregir',
+      needsFix: 'El servidor no aceptó el censo por estos datos:',
+      anomalyTitle: 'No se pudo registrar',
+      anomaly:
+        'El servidor no aceptó este censo y no se vuelve a enviar. Avisá a la oficina para que lo revisen.',
+      inReviewTitle: 'Enviado, en revisión',
+      inReview: 'El censo llegó y la oficina tiene que revisarlo.',
+    },
     test: {
       button: 'Crear censo de prueba',
       created: 'Censo de prueba listo para enviar',

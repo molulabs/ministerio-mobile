@@ -1,6 +1,11 @@
+import { and, desc, eq, ne } from 'drizzle-orm';
+import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
+
+import { uuidv7 } from '@/src/infrastructure/crypto/uuid';
 import { getDatabase } from '@/src/infrastructure/db/client';
 import { censuses } from '@/src/infrastructure/db/schema';
-import { uuidv7 } from '@/src/infrastructure/crypto/uuid';
+
+import { type CensusListItem, toListItem } from './censusList';
 
 /** The payload version the API reads (CensusSubmissionService::SCHEMA_VERSION). */
 export const SCHEMA_VERSION = 2;
@@ -24,4 +29,24 @@ export async function saveReadyCensus(
       updatedAt: now,
     });
   return id;
+}
+
+/** The user's censuses, newest first, kept up to date: a send that changes one re-renders. */
+export function useCensuses(userId: number): CensusListItem[] {
+  const { data } = useLiveQuery(
+    getDatabase()
+      .select({
+        id: censuses.id,
+        status: censuses.status,
+        payload: censuses.payload,
+        errors: censuses.errors,
+        conflict: censuses.conflict,
+      })
+      .from(censuses)
+      .where(and(eq(censuses.userId, userId), ne(censuses.status, 'draft')))
+      // UUID v7: the newest census has the highest id.
+      .orderBy(desc(censuses.id)),
+    [userId],
+  );
+  return data.flatMap((row) => toListItem(row) ?? []);
 }

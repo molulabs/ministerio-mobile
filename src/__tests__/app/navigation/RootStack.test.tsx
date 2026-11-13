@@ -6,7 +6,7 @@ import { RootStack } from '@/src/app/navigation/RootStack';
 
 type MockState = {
   status: 'signedOut' | 'signedIn';
-  user: { firstname: string; lastname: string; email: string } | null;
+  user: { id: number; firstname: string; lastname: string; email: string } | null;
   mode: 'online' | 'offline' | null;
   signedOutReason: null;
   signIn: jest.Mock;
@@ -30,8 +30,21 @@ jest.mock('@/src/infrastructure/sync/syncState', () => ({
 // The sync engine brings the API client and the database along; the tabs only ask it to send.
 const mockSendCensusesNow = jest.fn();
 jest.mock('@/src/app/sync', () => ({ sendCensusesNow: () => mockSendCensusesNow() }));
-// Saving a census needs the local database, which tests do not open.
-jest.mock('@/src/features/census/census.repository', () => ({ saveReadyCensus: jest.fn() }));
+// The censuses live in the local database, which tests do not open: one is waiting to be sent.
+jest.mock('@/src/features/census/census.repository', () => ({
+  saveReadyCensus: jest.fn(),
+  useCensuses: () => [
+    {
+      id: '01a1d70a-496a-7a5e-bf6a-29b1b22455f3',
+      status: 'ready',
+      producer: 'Productor de prueba',
+      document: 'DNI 99000001',
+      date: '2026-11-13',
+      errors: [],
+      conflict: null,
+    },
+  ],
+}));
 
 // The map is native (MapLibre) and reads its packages from the database: none installed here.
 jest.mock('@maplibre/maplibre-react-native', () => ({}));
@@ -39,7 +52,7 @@ jest.mock('@/src/features/maps/useOfflineMap', () => ({
   useOfflineMap: () => ({ map: null, error: false }),
 }));
 
-const rosa = { firstname: 'Rosa', lastname: 'Mendieta', email: 'rosa@company.com' };
+const rosa = { id: 7, firstname: 'Rosa', lastname: 'Mendieta', email: 'rosa@company.com' };
 
 function renderNavigation() {
   // App.tsx puts the toasts above the navigation.
@@ -100,7 +113,7 @@ describe('RootStack', () => {
     await renderNavigation();
 
     await fireEvent.press(screen.getByRole('tab', { name: 'Censos' }));
-    expect(screen.getByText(/Acá vas a ver tus censos/)).toBeOnTheScreen();
+    expect(screen.getByText('Productor de prueba')).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('tab', { name: 'Mapa' }));
     expect(screen.getByText(/mapa de Jujuy/)).toBeOnTheScreen();
