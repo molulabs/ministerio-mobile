@@ -69,3 +69,53 @@ export const mapPackages = sqliteTable('map_packages', {
   requires: text('requires', { mode: 'json' }).$type<string[]>(),
   installedAt: integer('installed_at', { mode: 'timestamp_ms' }).notNull(),
 });
+
+/*
+ * Censuses taken on this phone: the drafts and the outbox are the same rows, told apart by the
+ * status. Field data is never lost: a row is deleted only by its census taker, while a draft.
+ */
+
+/**
+ * - draft: being filled in; saved at every step of the form.
+ * - ready: finished, waiting to be sent.
+ * - sent: the API made a census of it (201 ACCEPTED).
+ * - in_review: the API kept it for an operator to sort out (202 CONFLICT); nothing to fix here.
+ * - needs_fix: the API rejected it (422); `errors` says which fields.
+ * - anomaly: the API has another census under this id (409); never sent again.
+ */
+export type CensusStatus = 'draft' | 'ready' | 'sent' | 'in_review' | 'needs_fix' | 'anomaly';
+
+/** One error of a 422, as the API gives it: the field is a path, as "livestock.cattleCowsOwn". */
+export type CensusFieldError = { field: string; message: string };
+
+export const censuses = sqliteTable(
+  'censuses',
+  {
+    /** UUID v7 made on the phone: the id of the PUT, so sending it twice gives one census. */
+    id: text('id').primaryKey(),
+    /** The API id of the census taker. A census is only ever sent with this user's token. */
+    userId: integer('user_id').notNull(),
+    /** The shape of the payload; the API rejects a version it does not read. */
+    schemaVersion: integer('schema_version').notNull(),
+    /**
+     * The body of the PUT. Once sent it must not change: the API answers a second PUT with the
+     * first answer only when the payload is the same, and with a 409 otherwise.
+     */
+    payload: text('payload', { mode: 'json' }).$type<Record<string, unknown>>().notNull(),
+    status: text('status').$type<CensusStatus>().notNull(),
+    /** Why the API rejected it (needs_fix). */
+    errors: text('errors', { mode: 'json' }).$type<CensusFieldError[]>(),
+    /** What the operator has to sort out (in_review), as the API words it. */
+    conflict: text('conflict'),
+    /** The id of the census the API made of it (sent). */
+    censusId: integer('census_id'),
+    /** Sends that failed for the network or the server, and when to try again (ready). */
+    attempts: integer('attempts').notNull().default(0),
+    nextAttemptAt: integer('next_attempt_at', { mode: 'timestamp_ms' }),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+    /** When the API answered 201 or 202. */
+    sentAt: integer('sent_at', { mode: 'timestamp_ms' }),
+  },
+  (table) => [index('censuses_user_status_idx').on(table.userId, table.status)],
+);
