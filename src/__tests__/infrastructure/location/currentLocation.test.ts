@@ -1,4 +1,4 @@
-import { currentLocation } from '@/src/features/maps/currentLocation';
+import { currentLocation } from '@/src/infrastructure/location/currentLocation';
 
 let mockListener: ((position: unknown) => void) | null = null;
 const mockRemove = jest.fn();

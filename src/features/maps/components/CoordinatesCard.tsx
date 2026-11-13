@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { texts } from '@/src/shared/constants/texts';
 
-import { coordinatesText, formatAccuracy, formatDegrees } from '../coordinates';
+import { coordinatesText, formatAccuracy, formatDegrees } from '@/src/shared/utilities/coordinates';
 
 /** How long "Copiado" stays on the button. */
 const COPIED_MS = 2000;

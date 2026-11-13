@@ -17,6 +17,12 @@ Offline-first Android app (iOS later) for the livestock/producer census of the M
 - Census rules never go into the design system (`@molulabs/ds`).
 - The app will be forked as a base for other apps: the fork removes everything about censuses (`features/census/`, its tables and its sync) and adds its own home tab. Keep the census inside `features/census/` so it comes out whole.
 
+## Folder structure
+
+- Everything about the census lives in `features/census/` (a fork removes it whole): `census.repository.ts` (the only door to the `censuses` table), `list/` (the Censos tab) and `form/` (the wizard, one folder per step under `form/steps/`, named as in the web so each web change has its twin file).
+- The GPS is device access: `infrastructure/location/` (`currentLocation`, `useGpsPosition`), used by the map and the census form. Coordinate formatting: `shared/utilities/coordinates.ts`.
+- Names: screens `*.screen.tsx`, components `Component.tsx`, logic camelCase with its role (`census.repository.ts`, `outbox.sender.ts`).
+
 ## Navigation
 
 - React Navigation 7 in `src/app/navigation/`: `RootStack` (native stack) shows `Login` when signed out and `Main` (bottom tabs: Censos · Mapa · Perfil) when signed in. The app opens on Censos, and Android's back button returns there from any tab (`backBehavior="initialRoute"`). There is no home tab (decided 2026-11-13): the warning that the offline data was never downloaded is on Censos. The session decides which screens exist, so the back button never crosses between them; nobody calls `navigate` to sign in or out.
@@ -60,7 +66,7 @@ Offline-first Android app (iOS later) for the livestock/producer census of the M
 - A sent payload never changes: the API answers a repeated PUT only when the body is the same, and 409 otherwise.
 - `outbox.store.ts` only changes rows still `ready`, so a late answer never overwrites an earlier one.
 - `sendNow` has its own serial queue, so the "Enviar censos" button does not wait for a map download. `src/app/sync.ts` exports `sendCensusesNow()` (forced: it ignores the backoff).
-- The Censos tab (`features/census/screens/census-list.screen.tsx`) lists the user's censuses live, grouped as Para revisar (`needs_fix`, `anomaly`), Pendientes de envío (`ready`) and Enviados (`sent`, `in_review`); tapping one the API answered opens what it said. Drafts are not listed until the census form exists.
+- The Censos tab (`features/census/list/census-list.screen.tsx`) lists the user's censuses live, grouped as Para revisar (`needs_fix`, `anomaly`), Pendientes de envío (`ready`) and Enviados (`sent`, `in_review`); tapping one the API answered opens what it said. Drafts are not listed until the census form exists.
 - Unsent = `draft` + `ready` + `needs_fix` (the badge and the sign-out warning). An `anomaly` is not counted: the phone can do nothing more with it.
 - Development builds have a "Crear censo de prueba" button (`__DEV__` only) that saves a made-up census (`features/census/testCensus.ts`, DNI 99000001) ready to send.
 

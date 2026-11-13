@@ -4,7 +4,7 @@ import {
   formatCensusDate,
   groupCensuses,
   toListItem,
-} from '@/src/features/census/censusList';
+} from '@/src/features/census/list/censusList';
 
 const row = (change: Partial<CensusRow> = {}): CensusRow => ({
   id: '01a1d70a-496a-7a5e-bf6a-29b1b22455f3',

@@ -1,4 +1,4 @@
-import { sendSummary } from '@/src/features/census/sendSummary';
+import { sendSummary } from '@/src/features/census/list/sendSummary';
 import type { SendResult } from '@/src/infrastructure/sync/outbox.sender';
 
 const result = (counts: Partial<SendResult>): SendResult => ({

@@ -1,8 +1,8 @@
 import { ToastProvider } from '@molulabs/ds';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
-import type { CensusListItem } from '@/src/features/census/censusList';
-import { CensusListScreen } from '@/src/features/census/screens/census-list.screen';
+import type { CensusListItem } from '@/src/features/census/list/censusList';
+import { CensusListScreen } from '@/src/features/census/list/census-list.screen';
 
 const census = (change: Partial<CensusListItem>): CensusListItem => ({
   id: '01a1d70a-496a-7a5e-bf6a-29b1b22455f3',

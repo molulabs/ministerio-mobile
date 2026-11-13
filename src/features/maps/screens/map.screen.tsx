@@ -17,8 +17,8 @@ import { CoordinatesCard } from '../components/CoordinatesCard';
 import { LOCATION_PUCK_LAYERS, LocationPuck } from '../components/LocationPuck';
 import { MapIcon, type MapIconName } from '../components/mapIcons';
 import { PickedPoint } from '../components/PickedPoint';
-import { currentLocation } from '../currentLocation';
-import { useGpsPosition } from '../useGpsPosition';
+import { currentLocation } from '@/src/infrastructure/location/currentLocation';
+import { useGpsPosition } from '@/src/infrastructure/location/useGpsPosition';
 import { useOfflineMap } from '../useOfflineMap';
 
 const ANIMATION_MS = 250;

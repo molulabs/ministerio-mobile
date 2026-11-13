@@ -7,7 +7,7 @@ import {
   useCensuses,
   useUnsentCount,
 } from '@/src/features/census/census.repository';
-import { CensusListScreen } from '@/src/features/census/screens/census-list.screen';
+import { CensusListScreen } from '@/src/features/census/list/census-list.screen';
 import { testCensusPayload } from '@/src/features/census/testCensus';
 import { MapScreen } from '@/src/features/maps/screens/map.screen';
 import { ProfileScreen } from '@/src/features/profile/screens/profile.screen';

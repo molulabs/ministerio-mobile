@@ -1,4 +1,4 @@
-import { coordinatesText, formatAccuracy } from '@/src/features/maps/coordinates';
+import { coordinatesText, formatAccuracy } from '@/src/shared/utilities/coordinates';
 
 describe('coordinates', () => {
   it('writes latitude first, with six decimals', () => {

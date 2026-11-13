@@ -54,7 +54,7 @@ jest.mock('@/src/features/maps/components/PickedPoint', () => {
   return { PickedPoint: () => <Text>marked point</Text> };
 });
 
-jest.mock('@/src/features/maps/useGpsPosition', () => ({
+jest.mock('@/src/infrastructure/location/useGpsPosition', () => ({
   useGpsPosition: (enabled: boolean) => (enabled ? mockGpsPosition : undefined),
 }));
 
@@ -62,7 +62,7 @@ jest.mock('expo-clipboard', () => ({ setStringAsync: jest.fn(async () => true) }
 
 jest.mock('@react-navigation/native', () => ({ useIsFocused: () => true }));
 
-jest.mock('@/src/features/maps/currentLocation', () => ({
+jest.mock('@/src/infrastructure/location/currentLocation', () => ({
   currentLocation: () => mockGetCurrentPosition(),
 }));
 

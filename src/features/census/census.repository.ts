@@ -5,10 +5,8 @@ import { uuidv7 } from '@/src/infrastructure/crypto/uuid';
 import { getDatabase } from '@/src/infrastructure/db/client';
 import { censuses, type CensusStatus } from '@/src/infrastructure/db/schema';
 
-import { type CensusListItem, toListItem } from './censusList';
-
-/** The payload version the API reads (CensusSubmissionService::SCHEMA_VERSION). */
-export const SCHEMA_VERSION = 2;
+import { SCHEMA_VERSION } from './form/censusForm.model';
+import { type CensusListItem, toListItem } from './list/censusList';
 
 /** Saves a finished census of the user, ready for the sync engine to send. Returns its id. */
 export async function saveReadyCensus(
