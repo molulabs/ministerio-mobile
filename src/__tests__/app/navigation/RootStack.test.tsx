@@ -95,17 +95,18 @@ describe('RootStack', () => {
     expect(screen.queryByText('Perfil')).not.toBeOnTheScreen();
   });
 
-  it('opens on the home tab when signed in', async () => {
+  it('opens on the census list when signed in', async () => {
     mockState = { ...mockState, status: 'signedIn', user: rosa, mode: 'online' };
     await renderNavigation();
 
-    expect(screen.getByText('¡Hola, Rosa!')).toBeOnTheScreen();
+    expect(screen.getByText('Productor de prueba')).toBeOnTheScreen();
     expect(screen.queryByText('Censo de productores')).not.toBeOnTheScreen();
   });
 
   it('warns on the home tab while the offline data was never downloaded', async () => {
     mockState = { ...mockState, status: 'signedIn', user: rosa, mode: 'online' };
     await renderNavigation();
+    await fireEvent.press(screen.getByRole('tab', { name: 'Inicio' }));
 
     expect(screen.getByText('Faltan los datos para trabajar sin conexión')).toBeOnTheScreen();
   });
@@ -114,6 +115,7 @@ describe('RootStack', () => {
     mockState = { ...mockState, status: 'signedIn', user: rosa, mode: 'online' };
     mockSyncState = { catalogsSyncedAt: '1000' };
     await renderNavigation();
+    await fireEvent.press(screen.getByRole('tab', { name: 'Inicio' }));
 
     expect(screen.queryByText('Faltan los datos para trabajar sin conexión')).not.toBeOnTheScreen();
   });
@@ -121,6 +123,9 @@ describe('RootStack', () => {
   it('moves between the tabs', async () => {
     mockState = { ...mockState, status: 'signedIn', user: rosa, mode: 'online' };
     await renderNavigation();
+
+    await fireEvent.press(screen.getByRole('tab', { name: 'Inicio' }));
+    expect(screen.getByText('¡Hola, Rosa!')).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('tab', { name: 'Censos' }));
     expect(screen.getByText('Productor de prueba')).toBeOnTheScreen();

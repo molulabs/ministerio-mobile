@@ -88,11 +88,12 @@ export function MainTabs() {
   if (userId === undefined) return null;
   return (
     <Tab.Navigator
-      backBehavior="firstRoute"
+      // The app opens on the census list, the enumerator's work; back from any tab returns there.
+      initialRouteName="Census"
+      backBehavior="initialRoute"
       tabBar={(props) => <TabBarWithCounts {...props} userId={userId} />}
       screenOptions={{ header: (props) => <AppHeader {...props} /> }}
     >
-      {/* First tab, so the app opens here. Revisit when the census list exists. */}
       <Tab.Screen name="Home" component={HomeTab} options={{ title: texts.tabs.home }} />
       <Tab.Screen name="Census" component={CensusTab} options={{ title: texts.tabs.census }} />
       <Tab.Screen name="Map" component={MapScreen} options={{ title: texts.tabs.map }} />
