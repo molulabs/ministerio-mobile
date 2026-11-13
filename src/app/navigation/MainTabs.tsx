@@ -1,7 +1,12 @@
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { type BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
+import type { SessionUser } from '@/src/features/auth/auth.model';
 import { useSession } from '@/src/features/auth/session.store';
-import { saveReadyCensus, useCensuses } from '@/src/features/census/census.repository';
+import {
+  saveReadyCensus,
+  useCensuses,
+  useUnsentCount,
+} from '@/src/features/census/census.repository';
 import { CensusListScreen } from '@/src/features/census/screens/census-list.screen';
 import { testCensusPayload } from '@/src/features/census/testCensus';
 import { HomeScreen } from '@/src/features/home/screens/home.screen';
@@ -49,10 +54,15 @@ function UserCensuses({ userId }: { userId: number }) {
 /** Features do not import each other: the profile gets the session user and sync state from here. */
 function ProfileTab() {
   const user = useSession((state) => state.user);
+  if (!user) return null;
+  return <UserProfile user={user} />;
+}
+
+function UserProfile({ user }: { user: SessionUser }) {
   const mode = useSession((state) => state.mode);
   const signOut = useSession((state) => state.signOut);
   const lastSyncAt = useSyncState(syncKeys.lastSyncAt);
-  if (!user) return null;
+  const unsentCount = useUnsentCount(user.id);
   return (
     <ProfileScreen
       firstname={user.firstname}
@@ -60,16 +70,26 @@ function ProfileTab() {
       email={user.email}
       offline={mode === 'offline'}
       lastSyncAt={lastSyncAt === null ? null : Number(lastSyncAt)}
+      unsentCount={unsentCount}
       onSignOut={signOut}
     />
   );
 }
 
+/** The tabs, with the user's censuses not sent yet on the census tab. */
+function TabBarWithCounts({ userId, ...props }: BottomTabBarProps & { userId: number }) {
+  const unsent = useUnsentCount(userId);
+  return <AppTabBar {...props} badges={{ Census: unsent }} />;
+}
+
 export function MainTabs() {
+  // Only shown signed in: the session decides which screens exist.
+  const userId = useSession((state) => state.user?.id);
+  if (userId === undefined) return null;
   return (
     <Tab.Navigator
       backBehavior="firstRoute"
-      tabBar={(props) => <AppTabBar {...props} />}
+      tabBar={(props) => <TabBarWithCounts {...props} userId={userId} />}
       screenOptions={{ header: (props) => <AppHeader {...props} /> }}
     >
       {/* First tab, so the app opens here. Revisit when the census list exists. */}

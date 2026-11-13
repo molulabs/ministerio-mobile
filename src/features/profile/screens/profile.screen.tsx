@@ -1,4 +1,4 @@
-import { AlertBanner, Button, Card, KeyValueList } from '@molulabs/ds';
+import { AlertBanner, Button, Card, Dialog, KeyValueList } from '@molulabs/ds';
 import { useState } from 'react';
 
 import { texts } from '@/src/shared/constants/texts';
@@ -13,6 +13,8 @@ interface ProfileScreenProps {
   offline: boolean;
   /** Epoch ms of the last finished sync, or null if it never ran. */
   lastSyncAt: number | null;
+  /** The user's censuses that have not gone out: signing out asks first when there are any. */
+  unsentCount: number;
   onSignOut: () => Promise<void>;
 }
 
@@ -23,11 +25,14 @@ export function ProfileScreen({
   email,
   offline,
   lastSyncAt,
+  unsentCount,
   onSignOut,
 }: ProfileScreenProps) {
   const [signingOut, setSigningOut] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   const signOut = async () => {
+    setConfirming(false);
     setSigningOut(true);
     await onSignOut();
   };
@@ -55,10 +60,21 @@ export function ProfileScreen({
         // The icon is a character of the icon font: without a label it would be read as part of the name.
         aria-label={signingOut ? texts.profile.signingOut : texts.profile.signOut}
         disabled={signingOut}
-        onClick={() => void signOut()}
+        onClick={() => (unsentCount > 0 ? setConfirming(true) : void signOut())}
       >
         {signingOut ? texts.profile.signingOut : texts.profile.signOut}
       </Button>
+      {/* Nothing is lost by signing out, but another user cannot send them: the owner must come back. */}
+      <Dialog
+        open={confirming}
+        title={texts.profile.unsentTitle}
+        confirmLabel={texts.profile.unsentConfirm}
+        cancelLabel={texts.profile.unsentCancel}
+        onConfirm={() => void signOut()}
+        onCancel={() => setConfirming(false)}
+      >
+        {texts.profile.unsent(unsentCount)}
+      </Dialog>
     </Screen>
   );
 }

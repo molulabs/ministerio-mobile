@@ -31,8 +31,10 @@ jest.mock('@/src/infrastructure/sync/syncState', () => ({
 const mockSendCensusesNow = jest.fn();
 jest.mock('@/src/app/sync', () => ({ sendCensusesNow: () => mockSendCensusesNow() }));
 // The censuses live in the local database, which tests do not open: one is waiting to be sent.
+let mockUnsentCount: number;
 jest.mock('@/src/features/census/census.repository', () => ({
   saveReadyCensus: jest.fn(),
+  useUnsentCount: () => mockUnsentCount,
   useCensuses: () => [
     {
       id: '01a1d70a-496a-7a5e-bf6a-29b1b22455f3',
@@ -44,6 +46,12 @@ jest.mock('@/src/features/census/census.repository', () => ({
       conflict: null,
     },
   ],
+}));
+
+// The connection comes from Android: each test says whether there is signal.
+let mockReachable: boolean | null;
+jest.mock('@/src/infrastructure/network/network.monitor', () => ({
+  useReachable: () => mockReachable,
 }));
 
 // The map is native (MapLibre) and reads its packages from the database: none installed here.
@@ -68,6 +76,8 @@ function renderNavigation() {
 describe('RootStack', () => {
   beforeEach(() => {
     mockSyncState = {};
+    mockUnsentCount = 0;
+    mockReachable = true;
     mockState = {
       status: 'signedOut',
       user: null,
@@ -147,5 +157,64 @@ describe('RootStack', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Cerrar sesión' }));
 
     expect(mockState.signOut).toHaveBeenCalled();
+  });
+  it('counts the censuses not sent on the census tab', async () => {
+    mockState = { ...mockState, status: 'signedIn', user: rosa, mode: 'online' };
+    mockUnsentCount = 3;
+    await renderNavigation();
+
+    expect(screen.getByText('3')).toBeOnTheScreen();
+  });
+
+  it('says when there is no signal', async () => {
+    mockState = { ...mockState, status: 'signedIn', user: rosa, mode: 'online' };
+    mockReachable = false;
+    await renderNavigation();
+
+    expect(screen.getByText('Sin conexión')).toBeOnTheScreen();
+  });
+
+  it('says when the session was opened without signal, which cannot send', async () => {
+    mockState = { ...mockState, status: 'signedIn', user: rosa, mode: 'offline' };
+    await renderNavigation();
+
+    expect(screen.getByText('Sesión sin conexión')).toBeOnTheScreen();
+  });
+
+  it('says nothing about the connection when the phone can send', async () => {
+    mockState = { ...mockState, status: 'signedIn', user: rosa, mode: 'online' };
+    await renderNavigation();
+
+    expect(screen.queryByText('Sin conexión')).toBeNull();
+    expect(screen.queryByText('Sesión sin conexión')).toBeNull();
+  });
+
+  it('asks before signing out with censuses not sent', async () => {
+    mockState = { ...mockState, status: 'signedIn', user: rosa, mode: 'online' };
+    mockUnsentCount = 2;
+    await renderNavigation();
+
+    await fireEvent.press(screen.getByRole('tab', { name: 'Perfil' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Cerrar sesión' }));
+
+    expect(mockState.signOut).not.toHaveBeenCalled();
+    expect(screen.getByText(/Quedan 2 censos sin enviar en este teléfono/)).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Cerrar sesión igual' }));
+
+    expect(mockState.signOut).toHaveBeenCalled();
+  });
+
+  it('keeps the session when the user goes back from the warning', async () => {
+    mockState = { ...mockState, status: 'signedIn', user: rosa, mode: 'online' };
+    mockUnsentCount = 1;
+    await renderNavigation();
+
+    await fireEvent.press(screen.getByRole('tab', { name: 'Perfil' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Cerrar sesión' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Volver' }));
+
+    expect(mockState.signOut).not.toHaveBeenCalled();
+    expect(screen.queryByText(/Queda 1 censo sin enviar/)).toBeNull();
   });
 });

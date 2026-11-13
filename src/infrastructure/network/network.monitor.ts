@@ -1,4 +1,4 @@
-import { addNetworkStateListener, type NetworkState } from 'expo-network';
+import { addNetworkStateListener, type NetworkState, useNetworkState } from 'expo-network';
 
 const isReachable = (state: NetworkState) =>
   state.isConnected === true && state.isInternetReachable !== false;
@@ -35,4 +35,10 @@ export function onStableSignal(listener: () => void, holdMs: number): () => void
     cancel();
     subscription.remove();
   };
+}
+
+/** Whether the phone can reach the internet now, kept up to date; null until Android says. */
+export function useReachable(): boolean | null {
+  const state = useNetworkState();
+  return state.isConnected === undefined ? null : isReachable(state);
 }

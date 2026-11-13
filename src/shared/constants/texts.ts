@@ -40,6 +40,10 @@ export const texts = {
     failedText:
       'No se pudo abrir la base de datos del teléfono. Los datos guardados no se borraron. Avisale a soporte.',
   },
+  connection: {
+    noSignal: 'Sin conexión',
+    offlineSession: 'Sesión sin conexión',
+  },
   tabs: {
     home: 'Inicio',
     census: 'Censos',
@@ -133,6 +137,13 @@ export const texts = {
     greeting: (firstname: string) => `Hola, ${firstname}`,
     signOut: 'Cerrar sesión',
     signingOut: 'Cerrando sesión…',
+    unsentTitle: 'Tenés censos sin enviar',
+    unsent: (count: number) =>
+      count === 1
+        ? 'Queda 1 censo sin enviar en este teléfono. No se borra, pero solo se envía cuando vuelvas a iniciar sesión con tu usuario.'
+        : `Quedan ${count} censos sin enviar en este teléfono. No se borran, pero solo se envían cuando vuelvas a iniciar sesión con tu usuario.`,
+    unsentConfirm: 'Cerrar sesión igual',
+    unsentCancel: 'Volver',
     offlineTitle: 'Sin conexión',
     offlineMode: 'Entraste con los datos guardados en este teléfono.',
     name: 'Nombre',

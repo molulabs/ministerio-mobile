@@ -1,9 +1,9 @@
-import { and, desc, eq, ne } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, ne } from 'drizzle-orm';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 
 import { uuidv7 } from '@/src/infrastructure/crypto/uuid';
 import { getDatabase } from '@/src/infrastructure/db/client';
-import { censuses } from '@/src/infrastructure/db/schema';
+import { censuses, type CensusStatus } from '@/src/infrastructure/db/schema';
 
 import { type CensusListItem, toListItem } from './censusList';
 
@@ -49,4 +49,22 @@ export function useCensuses(userId: number): CensusListItem[] {
     [userId],
   );
   return data.flatMap((row) => toListItem(row) ?? []);
+}
+
+/**
+ * What has not reached the API yet and still can: the drafts, the ready to send and the ones to
+ * fix. A census the API refused (anomaly) is not counted: the phone can do nothing more with it.
+ */
+const UNSENT: CensusStatus[] = ['draft', 'ready', 'needs_fix'];
+
+/** How many of the user's censuses have not gone out, kept up to date. */
+export function useUnsentCount(userId: number): number {
+  const { data } = useLiveQuery(
+    getDatabase()
+      .select({ unsent: count() })
+      .from(censuses)
+      .where(and(eq(censuses.userId, userId), inArray(censuses.status, UNSENT))),
+    [userId],
+  );
+  return data[0]?.unsent ?? 0;
 }
