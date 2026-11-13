@@ -16,7 +16,7 @@ if (!apiUrl) {
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: 'Censo',
-  slug: 'censo-mobile',
+  slug: 'censo-scad-jujuy',
   version: '0.1.0',
   orientation: 'portrait',
   icon: './assets/icon.png',
@@ -47,5 +47,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ],
   extra: {
     apiUrl,
+    // The project on EAS (builds, signing key, version codes).
+    eas: { projectId: 'b23dd739-66d9-4eaf-b925-cb26694f3158' },
   },
 });
