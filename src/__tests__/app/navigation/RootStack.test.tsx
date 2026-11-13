@@ -27,6 +27,12 @@ jest.mock('@/src/infrastructure/sync/syncState', () => ({
   useSyncState: (key: string) => mockSyncState[key] ?? null,
 }));
 
+// The sync engine brings the API client and the database along; the tabs only ask it to send.
+const mockSendCensusesNow = jest.fn();
+jest.mock('@/src/app/sync', () => ({ sendCensusesNow: () => mockSendCensusesNow() }));
+// Saving a census needs the local database, which tests do not open.
+jest.mock('@/src/features/census/census.repository', () => ({ saveReadyCensus: jest.fn() }));
+
 // The map is native (MapLibre) and reads its packages from the database: none installed here.
 jest.mock('@maplibre/maplibre-react-native', () => ({}));
 jest.mock('@/src/features/maps/useOfflineMap', () => ({
@@ -101,6 +107,23 @@ describe('RootStack', () => {
 
     await fireEvent.press(screen.getByRole('tab', { name: 'Perfil' }));
     expect(screen.getByText('Hola, Rosa')).toBeOnTheScreen();
+  });
+
+  it('sends the censuses from the census tab and says what happened', async () => {
+    mockState = { ...mockState, status: 'signedIn', user: rosa, mode: 'online' };
+    mockSendCensusesNow.mockResolvedValue({
+      sent: 2,
+      inReview: 0,
+      needsFix: 0,
+      anomalies: 0,
+      waiting: 0,
+    });
+    await renderNavigation();
+
+    await fireEvent.press(screen.getByRole('tab', { name: 'Censos' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Enviar censos' }));
+
+    expect(await screen.findByText('Se enviaron 2 censos')).toBeOnTheScreen();
   });
 
   it('signs out from the profile tab', async () => {

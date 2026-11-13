@@ -54,6 +54,33 @@ export const texts = {
   },
   census: {
     emptyTitle: 'Todavía no hay censos',
+    test: {
+      button: 'Crear censo de prueba',
+      created: 'Censo de prueba listo para enviar',
+    },
+    send: {
+      button: 'Enviar censos',
+      sending: 'Enviando…',
+      offlineSessionTitle: 'No se puede enviar',
+      offlineSession: 'Entraste sin conexión. Iniciá sesión con internet para enviar los censos.',
+      failedTitle: 'No se pudo enviar',
+      failed: 'Intentá de nuevo.',
+      nothing: 'No hay censos para enviar',
+      sent: (count: number) => (count === 1 ? 'Se envió 1 censo' : `Se enviaron ${count} censos`),
+      toCheckTitle: 'Hay censos para revisar',
+      needsFix: (count: number) =>
+        count === 1
+          ? '1 censo tiene datos para corregir.'
+          : `${count} censos tienen datos para corregir.`,
+      anomalies: (count: number) =>
+        count === 1
+          ? '1 censo no se pudo registrar. Avisá a la oficina.'
+          : `${count} censos no se pudieron registrar. Avisá a la oficina.`,
+      waiting: (count: number) =>
+        count === 1
+          ? 'Quedó 1 censo sin enviar. Se vuelve a intentar cuando haya señal.'
+          : `Quedaron ${count} censos sin enviar. Se vuelve a intentar cuando haya señal.`,
+    },
     empty: 'Acá vas a ver tus censos: borradores, pendientes de envío, enviados y a corregir.',
   },
   map: {
