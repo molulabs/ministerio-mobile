@@ -9,7 +9,6 @@ import {
 } from '@/src/features/census/census.repository';
 import { CensusListScreen } from '@/src/features/census/screens/census-list.screen';
 import { testCensusPayload } from '@/src/features/census/testCensus';
-import { HomeScreen } from '@/src/features/home/screens/home.screen';
 import { MapScreen } from '@/src/features/maps/screens/map.screen';
 import { ProfileScreen } from '@/src/features/profile/screens/profile.screen';
 import { syncKeys, useSyncState } from '@/src/infrastructure/sync/syncState';
@@ -21,14 +20,6 @@ import type { MainTabsParamList } from './routes';
 
 const Tab = createBottomTabNavigator<MainTabsParamList>();
 
-function HomeTab() {
-  const firstname = useSession((state) => state.user?.firstname);
-  // The catalogs are what the census form needs offline; the home only gets a yes or no.
-  const catalogsSyncedAt = useSyncState(syncKeys.catalogsSyncedAt);
-  if (!firstname) return null;
-  return <HomeScreen firstname={firstname} offlineDataMissing={catalogsSyncedAt === null} />;
-}
-
 function CensusTab() {
   const userId = useSession((state) => state.user?.id);
   if (userId === undefined) return null;
@@ -38,6 +29,8 @@ function CensusTab() {
 /** The census list of the signed-in user: a census is only ever shown to whoever took it. */
 function UserCensuses({ userId }: { userId: number }) {
   const censuses = useCensuses(userId);
+  // The catalogs are what the census form needs without signal.
+  const catalogsSyncedAt = useSyncState(syncKeys.catalogsSyncedAt);
   // Only in development builds: a release build never makes made-up censuses.
   const createTestCensus = __DEV__
     ? async () => void (await saveReadyCensus(userId, testCensusPayload()))
@@ -45,6 +38,7 @@ function UserCensuses({ userId }: { userId: number }) {
   return (
     <CensusListScreen
       censuses={censuses}
+      offlineDataMissing={catalogsSyncedAt === null}
       onSend={sendCensusesNow}
       onCreateTestCensus={createTestCensus}
     />
@@ -94,7 +88,6 @@ export function MainTabs() {
       tabBar={(props) => <TabBarWithCounts {...props} userId={userId} />}
       screenOptions={{ header: (props) => <AppHeader {...props} /> }}
     >
-      <Tab.Screen name="Home" component={HomeTab} options={{ title: texts.tabs.home }} />
       <Tab.Screen name="Census" component={CensusTab} options={{ title: texts.tabs.census }} />
       <Tab.Screen name="Map" component={MapScreen} options={{ title: texts.tabs.map }} />
       <Tab.Screen name="Profile" component={ProfileTab} options={{ title: texts.tabs.profile }} />

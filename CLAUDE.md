@@ -15,11 +15,11 @@ Offline-first Android app (iOS later) for the livestock/producer census of the M
 - Never lose field data: never delete unsent census rows on logout, token failure or migration.
 - Each census is sent only with its own user's token.
 - Census rules never go into the design system (`@molulabs/ds`).
-- The app will be forked as a base for other apps: Inicio (`features/home/`) stays generic and never shows anything about censuses.
+- The app will be forked as a base for other apps: the fork removes everything about censuses (`features/census/`, its tables and its sync) and adds its own home tab. Keep the census inside `features/census/` so it comes out whole.
 
 ## Navigation
 
-- React Navigation 7 in `src/app/navigation/`: `RootStack` (native stack) shows `Login` when signed out and `Main` (bottom tabs: Inicio · Censos · Mapa · Perfil) when signed in. The app opens on Censos (`initialRouteName`), and Android's back button returns there from any tab (`backBehavior="initialRoute"`). The session decides which screens exist, so the back button never crosses between them; nobody calls `navigate` to sign in or out.
+- React Navigation 7 in `src/app/navigation/`: `RootStack` (native stack) shows `Login` when signed out and `Main` (bottom tabs: Censos · Mapa · Perfil) when signed in. The app opens on Censos, and Android's back button returns there from any tab (`backBehavior="initialRoute"`). There is no home tab (decided 2026-11-13): the warning that the offline data was never downloaded is on Censos. The session decides which screens exist, so the back button never crosses between them; nobody calls `navigate` to sign in or out.
 - Route names and params are typed in `routes.ts` (global `ReactNavigation.RootParamList`).
 - Screens live in their feature; `src/app/navigation/` wires them and passes what crosses features as props (e.g. the profile tab gets the session user).
 - The tab bar and the top bar are the design system's (`AppTabBar.tsx`, icons in `TAB_ICONS`). The Censos tab shows the user's unsent censuses as a badge. The top bar's second line says why the phone cannot send, and only then: "Sin conexión" (no signal) or "Sesión sin conexión" (offline sign-in).

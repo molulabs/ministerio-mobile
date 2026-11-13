@@ -14,7 +14,6 @@ import { useTabBarHeight } from './tabBarHeight';
 
 /** The Tabler icon of each tab. */
 export const TAB_ICONS: Record<keyof MainTabsParamList, string> = {
-  Home: 'ti-home',
   Census: 'ti-clipboard-list',
   Map: 'ti-map',
   Profile: 'ti-user',

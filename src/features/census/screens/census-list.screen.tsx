@@ -1,4 +1,13 @@
-import { Button, EmptyState, ListGroup, ListRow, Sheet, Tag, useToasts } from '@molulabs/ds';
+import {
+  AlertBanner,
+  Button,
+  EmptyState,
+  ListGroup,
+  ListRow,
+  Sheet,
+  Tag,
+  useToasts,
+} from '@molulabs/ds';
 import { useState } from 'react';
 import { View } from 'react-native';
 
@@ -13,6 +22,8 @@ import { sendSummary } from '../sendSummary';
 type Props = {
   /** The user's censuses, newest first. */
   censuses: CensusListItem[];
+  /** The catalogs the census form needs without signal were never downloaded on this phone. */
+  offlineDataMissing: boolean;
   /** Sends the finished censuses now. It comes in by props: the sync engine lives in src/app. */
   onSend: () => Promise<SendOutcome>;
   /** Development builds only: leaves a census ready to send, until the census form exists. */
@@ -32,7 +43,12 @@ const hasDetail = (census: CensusListItem) =>
   census.status === 'needs_fix' || census.status === 'anomaly' || census.status === 'in_review';
 
 /** The censuses on the phone, by what the enumerator has to do with them, and the send button. */
-export function CensusListScreen({ censuses, onSend, onCreateTestCensus }: Props) {
+export function CensusListScreen({
+  censuses,
+  offlineDataMissing,
+  onSend,
+  onCreateTestCensus,
+}: Props) {
   const toasts = useToasts();
   const [sending, setSending] = useState(false);
   const [opened, setOpened] = useState<CensusListItem | null>(null);
@@ -55,6 +71,11 @@ export function CensusListScreen({ censuses, onSend, onCreateTestCensus }: Props
 
   const actions = (
     <>
+      {offlineDataMissing && (
+        <AlertBanner tone="warning" title={texts.census.offlineDataMissingTitle}>
+          {texts.census.offlineDataMissing}
+        </AlertBanner>
+      )}
       {pending && (
         <Button
           icon="ti-send"

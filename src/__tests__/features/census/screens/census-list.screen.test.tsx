@@ -23,7 +23,7 @@ function renderScreen(
 ) {
   return render(
     <ToastProvider>
-      <CensusListScreen censuses={censuses} onSend={onSend} />
+      <CensusListScreen censuses={censuses} offlineDataMissing={false} onSend={onSend} />
     </ToastProvider>,
   );
 }

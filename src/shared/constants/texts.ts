@@ -45,18 +45,13 @@ export const texts = {
     offlineSession: 'Sesión sin conexión',
   },
   tabs: {
-    home: 'Inicio',
     census: 'Censos',
     map: 'Mapa',
     profile: 'Perfil',
   },
-  home: {
-    welcome: (firstname: string) => `¡Hola, ${firstname}!`,
-    empty: 'Elegí una pestaña para empezar.',
+  census: {
     offlineDataMissingTitle: 'Faltan los datos para trabajar sin conexión',
     offlineDataMissing: 'Conectate a internet antes de salir para descargarlos.',
-  },
-  census: {
     emptyTitle: 'Todavía no hay censos',
     list: {
       sections: {

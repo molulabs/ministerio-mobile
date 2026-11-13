@@ -2,7 +2,6 @@ import type { NavigatorScreenParams } from '@react-navigation/native';
 
 /** Route names and their params, so TypeScript catches a navigation to a screen that does not exist. */
 export type MainTabsParamList = {
-  Home: undefined;
   Census: undefined;
   Map: undefined;
   Profile: undefined;

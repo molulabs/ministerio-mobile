@@ -103,10 +103,9 @@ describe('RootStack', () => {
     expect(screen.queryByText('Censo de productores')).not.toBeOnTheScreen();
   });
 
-  it('warns on the home tab while the offline data was never downloaded', async () => {
+  it('warns on the census tab while the offline data was never downloaded', async () => {
     mockState = { ...mockState, status: 'signedIn', user: rosa, mode: 'online' };
     await renderNavigation();
-    await fireEvent.press(screen.getByRole('tab', { name: 'Inicio' }));
 
     expect(screen.getByText('Faltan los datos para trabajar sin conexión')).toBeOnTheScreen();
   });
@@ -115,7 +114,6 @@ describe('RootStack', () => {
     mockState = { ...mockState, status: 'signedIn', user: rosa, mode: 'online' };
     mockSyncState = { catalogsSyncedAt: '1000' };
     await renderNavigation();
-    await fireEvent.press(screen.getByRole('tab', { name: 'Inicio' }));
 
     expect(screen.queryByText('Faltan los datos para trabajar sin conexión')).not.toBeOnTheScreen();
   });
@@ -124,9 +122,7 @@ describe('RootStack', () => {
     mockState = { ...mockState, status: 'signedIn', user: rosa, mode: 'online' };
     await renderNavigation();
 
-    await fireEvent.press(screen.getByRole('tab', { name: 'Inicio' }));
-    expect(screen.getByText('¡Hola, Rosa!')).toBeOnTheScreen();
-
+    await fireEvent.press(screen.getByRole('tab', { name: 'Mapa' }));
     await fireEvent.press(screen.getByRole('tab', { name: 'Censos' }));
     expect(screen.getByText('Productor de prueba')).toBeOnTheScreen();
 
