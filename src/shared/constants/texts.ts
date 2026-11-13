@@ -148,7 +148,8 @@ export const texts = {
     offlineMode: 'Entraste con los datos guardados en este teléfono.',
     name: 'Nombre',
     email: 'Email',
-    lastSync: 'Última sincronización',
+    // The last time the catalogs were checked with the API: sending censuses does not move it.
+    lastSync: 'Datos actualizados',
     lastSyncValue: (time: number | null) =>
       time === null ? 'Nunca' : new Date(time).toLocaleString('es-AR'),
   },
