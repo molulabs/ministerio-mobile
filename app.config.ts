@@ -23,10 +23,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   userInterfaceStyle: 'light',
   android: {
     package: 'com.molulabs.censo',
+    // The brand mark of the web (app/public/favicon.svg): CP on the accent of the "senal" theme.
     adaptiveIcon: {
-      backgroundColor: '#E6F4FE',
+      backgroundColor: '#0E7282',
       foregroundImage: './assets/android-icon-foreground.png',
-      backgroundImage: './assets/android-icon-background.png',
       monochromeImage: './assets/android-icon-monochrome.png',
     },
     predictiveBackGestureEnabled: false,
@@ -38,6 +38,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     ['expo-build-properties', { android: { minSdkVersion: 24 } }],
     'expo-secure-store',
+    // The Jujuy logo, as on the web login. Android 12+ shows it inside a circle: the image keeps
+    // the logo within it.
+    [
+      'expo-splash-screen',
+      { image: './assets/splash-icon.png', imageWidth: 220, backgroundColor: '#ffffff' },
+    ],
     'react-native-quick-crypto',
     // The local database holds producers' personal data: encrypted with SQLCipher.
     ['expo-sqlite', { useSQLCipher: true }],

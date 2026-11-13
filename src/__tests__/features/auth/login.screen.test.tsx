@@ -1,3 +1,4 @@
+import { ToastProvider } from '@molulabs/ds';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import { SignInError } from '@/src/features/auth/auth.model';
@@ -12,10 +13,19 @@ jest.mock('@/src/features/auth/session.store', () => ({
     select({ signIn: mockSignIn, signedOutReason: mockSignedOutReason }),
 }));
 
+// The error of a failed sign-in shows in a toast, as on the web.
+function renderLogin() {
+  return render(
+    <ToastProvider>
+      <LoginScreen />
+    </ToastProvider>,
+  );
+}
+
 async function fillAndSubmit(email: string, password: string) {
   await fireEvent.changeText(screen.getByLabelText('Email'), email);
   await fireEvent.changeText(screen.getByLabelText('Contraseña'), password);
-  await fireEvent.press(screen.getByRole('button', { name: 'Entrar' }));
+  await fireEvent.press(screen.getByRole('button', { name: 'Ingresar' }));
 }
 
 describe('LoginScreen', () => {
@@ -25,9 +35,9 @@ describe('LoginScreen', () => {
   });
 
   it('asks for the email and the password before calling the API', async () => {
-    await render(<LoginScreen />);
+    await renderLogin();
 
-    await fireEvent.press(screen.getByRole('button', { name: 'Entrar' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Ingresar' }));
 
     expect(await screen.findByText('El email es obligatorio')).toBeOnTheScreen();
     expect(screen.getByText('La contraseña es obligatoria')).toBeOnTheScreen();
@@ -35,7 +45,7 @@ describe('LoginScreen', () => {
   });
 
   it('rejects an invalid email', async () => {
-    await render(<LoginScreen />);
+    await renderLogin();
 
     await fillAndSubmit('rosa@', 'password');
 
@@ -45,7 +55,7 @@ describe('LoginScreen', () => {
 
   it('signs in with the trimmed email', async () => {
     mockSignIn.mockResolvedValue(undefined);
-    await render(<LoginScreen />);
+    await renderLogin();
 
     await fillAndSubmit('  rosa@company.com ', 'password');
 
@@ -70,7 +80,7 @@ describe('LoginScreen', () => {
     ],
   ] as const)('shows why the sign-in failed (%s)', async (kind, message) => {
     mockSignIn.mockRejectedValue(new SignInError(kind));
-    await render(<LoginScreen />);
+    await renderLogin();
 
     await fillAndSubmit('rosa@company.com', 'password');
 
@@ -82,7 +92,7 @@ describe('LoginScreen', () => {
     [1, 'Email o contraseña incorrectos. Sin conexión te queda 1 intento.'],
   ])('tells how many offline attempts are left (%i)', async (remaining, message) => {
     mockSignIn.mockRejectedValue(new SignInError('offline_wrong_password', remaining));
-    await render(<LoginScreen />);
+    await renderLogin();
 
     await fillAndSubmit('rosa@company.com', 'mala');
 
@@ -91,7 +101,7 @@ describe('LoginScreen', () => {
 
   it('says the 7 days without signal are over when they are', async () => {
     mockSignedOutReason = 'offline_expired';
-    await render(<LoginScreen />);
+    await renderLogin();
 
     expect(
       screen.getByText(
@@ -102,7 +112,7 @@ describe('LoginScreen', () => {
 
   it('says the session expired when it did', async () => {
     mockSignedOutReason = 'expired';
-    await render(<LoginScreen />);
+    await renderLogin();
 
     expect(screen.getByText('Tu sesión expiró. Iniciá sesión de nuevo.')).toBeOnTheScreen();
   });

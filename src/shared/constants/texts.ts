@@ -1,11 +1,14 @@
 /** User-facing texts. The app is only in Spanish, so there is no i18n layer. */
 export const texts = {
   login: {
-    title: 'Iniciar sesión',
+    title: 'Censo de productores',
+    subtitle: 'Secretaría de Coordinación de Agencias de Desarrollo',
+    logo: 'Jujuy, con la gente',
+    copyright: '© 2026 Gobierno de la Provincia de Jujuy',
     email: 'Email',
     password: 'Contraseña',
-    submit: 'Entrar',
-    submitting: 'Entrando…',
+    submit: 'Ingresar',
+    submitting: 'Ingresando…',
     failed: 'No se pudo iniciar sesión',
     emailInvalid: 'Ingresá un email válido',
     emailRequired: 'El email es obligatorio',

@@ -1,4 +1,5 @@
-import { DesignSystemProvider, fonts } from '@molulabs/ds/native';
+import { ToastProvider } from '@molulabs/ds';
+import { DesignSystemProvider, fonts, useTokens } from '@molulabs/ds/native';
 import { NavigationContainer } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
@@ -21,9 +22,15 @@ function DesignSystem({ children }: { children: ReactNode }) {
   const insets = useSafeAreaInsets();
   return (
     <DesignSystemProvider theme="senal" insets={insets}>
-      {children}
+      <Toasts bottom={insets.bottom}>{children}</Toasts>
     </DesignSystemProvider>
   );
+}
+
+/** The toasts of every screen, above the gesture bar. */
+function Toasts({ bottom, children }: { bottom: number; children: ReactNode }) {
+  const t = useTokens();
+  return <ToastProvider stackStyle={{ bottom: bottom + t.space7 }}>{children}</ToastProvider>;
 }
 
 export default function App() {

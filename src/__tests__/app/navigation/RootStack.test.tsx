@@ -1,3 +1,4 @@
+import { ToastProvider } from '@molulabs/ds';
 import { NavigationContainer } from '@react-navigation/native';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
@@ -35,10 +36,13 @@ jest.mock('@/src/features/maps/useOfflineMap', () => ({
 const rosa = { firstname: 'Rosa', lastname: 'Mendieta', email: 'rosa@company.com' };
 
 function renderNavigation() {
+  // App.tsx puts the toasts above the navigation.
   return render(
-    <NavigationContainer>
-      <RootStack />
-    </NavigationContainer>,
+    <ToastProvider>
+      <NavigationContainer>
+        <RootStack />
+      </NavigationContainer>
+    </ToastProvider>,
   );
 }
 
@@ -58,7 +62,7 @@ describe('RootStack', () => {
   it('shows only the login when signed out', async () => {
     await renderNavigation();
 
-    expect(screen.getByText('Iniciar sesión')).toBeOnTheScreen();
+    expect(screen.getByText('Censo de productores')).toBeOnTheScreen();
     expect(screen.queryByText('Perfil')).not.toBeOnTheScreen();
   });
 
@@ -67,7 +71,7 @@ describe('RootStack', () => {
     await renderNavigation();
 
     expect(screen.getByText('¡Hola, Rosa!')).toBeOnTheScreen();
-    expect(screen.queryByText('Iniciar sesión')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Censo de productores')).not.toBeOnTheScreen();
   });
 
   it('warns on the home tab while the offline data was never downloaded', async () => {
