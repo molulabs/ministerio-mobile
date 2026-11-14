@@ -56,10 +56,12 @@ export const texts = {
     list: {
       sections: {
         toCheck: 'Para revisar',
+        drafts: 'Borradores',
         pending: 'Pendientes de envío',
         sent: 'Enviados',
       },
       status: {
+        draft: 'Borrador',
         ready: 'Pendiente',
         sent: 'Enviado',
         in_review: 'En revisión',
@@ -75,6 +77,27 @@ export const texts = {
         'El servidor no aceptó este censo y no se vuelve a enviar. Avisá a la oficina para que lo revisen.',
       inReviewTitle: 'Enviado, en revisión',
       inReview: 'El censo llegó y la oficina tiene que revisarlo.',
+    },
+    newCensus: 'Nuevo censo',
+    form: {
+      title: 'Censo',
+      date: 'Fecha',
+      formNumber: 'N° de formulario',
+      observations: 'Observaciones',
+      notYet: 'Este paso todavía no está en la app. Seguí con el siguiente.',
+      finish: 'Terminar censo',
+      missingTitle: 'Falta completar',
+      missing: {
+        date: 'La fecha del censo.',
+        producer: 'El nombre y el documento del productor.',
+      },
+      finished: 'Censo listo para enviar',
+      saved: (time: string) => `Guardado ${time}`,
+      gone: 'Este censo ya no es un borrador.',
+      discard: 'Descartar',
+      discardTitle: '¿Descartar este censo?',
+      discardText: 'Se borra del teléfono y no se puede recuperar.',
+      discardCancel: 'Volver',
     },
     test: {
       button: 'Crear censo de prueba',

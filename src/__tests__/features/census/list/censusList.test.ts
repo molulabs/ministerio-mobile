@@ -60,14 +60,18 @@ describe('toListItem', () => {
     ).toBe('30111222');
   });
 
-  it('does not list drafts', () => {
-    expect(toListItem(row({ status: 'draft' }))).toBeNull();
+  it('lists drafts, which may have no producer yet', () => {
+    expect(toListItem(row({ status: 'draft', payload: {} }))).toMatchObject({
+      status: 'draft',
+      producer: null,
+    });
   });
 });
 
 describe('groupCensuses', () => {
-  it('puts what needs the enumerator first, then the pending, then the sent', () => {
+  it('puts what needs the enumerator first, then the drafts, the pending and the sent', () => {
     const sections = groupCensuses([
+      item('6', 'draft'),
       item('5', 'sent'),
       item('4', 'ready'),
       item('3', 'anomaly'),
@@ -77,6 +81,7 @@ describe('groupCensuses', () => {
 
     expect(sections.map((section) => [section.key, section.items.map(({ id }) => id)])).toEqual([
       ['toCheck', ['3', '1']],
+      ['drafts', ['6']],
       ['pending', ['4']],
       ['sent', ['5', '2']],
     ]);

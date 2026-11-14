@@ -17,13 +17,22 @@ const census = (change: Partial<CensusListItem>): CensusListItem => ({
 
 const nothingSent = { sent: 0, inReview: 0, needsFix: 0, anomalies: 0, waiting: 0 };
 
+const mockNewCensus = jest.fn().mockResolvedValue(undefined);
+const mockOpenDraft = jest.fn();
+
 function renderScreen(
   censuses: CensusListItem[],
   onSend = jest.fn().mockResolvedValue(nothingSent),
 ) {
   return render(
     <ToastProvider>
-      <CensusListScreen censuses={censuses} offlineDataMissing={false} onSend={onSend} />
+      <CensusListScreen
+        censuses={censuses}
+        offlineDataMissing={false}
+        onNewCensus={mockNewCensus}
+        onOpenDraft={mockOpenDraft}
+        onSend={onSend}
+      />
     </ToastProvider>,
   );
 }
@@ -110,5 +119,39 @@ describe('CensusListScreen', () => {
     await renderScreen([census({ status: 'sent' })]);
 
     expect(screen.queryByRole('button', { name: /Rosa Quispe/ })).toBeNull();
+  });
+  it('starts a census', async () => {
+    await renderScreen([]);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Nuevo censo' }));
+
+    expect(mockNewCensus).toHaveBeenCalled();
+  });
+
+  it('lists the drafts and opens one where it was left', async () => {
+    await renderScreen([census({ status: 'draft', producer: null, document: null })]);
+
+    expect(screen.getByText('Borradores')).toBeOnTheScreen();
+    expect(screen.getByText('Borrador')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: /Productor sin nombre/ }));
+
+    expect(mockOpenDraft).toHaveBeenCalledWith('01a1d70a-496a-7a5e-bf6a-29b1b22455f3');
+  });
+
+  it('warns when the offline data was never downloaded', async () => {
+    await render(
+      <ToastProvider>
+        <CensusListScreen
+          censuses={[]}
+          offlineDataMissing
+          onNewCensus={mockNewCensus}
+          onOpenDraft={mockOpenDraft}
+          onSend={jest.fn()}
+        />
+      </ToastProvider>,
+    );
+
+    expect(screen.getByText('Faltan los datos para trabajar sin conexión')).toBeOnTheScreen();
   });
 });

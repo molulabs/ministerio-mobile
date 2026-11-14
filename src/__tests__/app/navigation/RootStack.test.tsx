@@ -34,6 +34,7 @@ jest.mock('@/src/app/sync', () => ({ sendCensusesNow: () => mockSendCensusesNow(
 let mockUnsentCount: number;
 jest.mock('@/src/features/census/census.repository', () => ({
   saveReadyCensus: jest.fn(),
+  createDraft: jest.fn(),
   useUnsentCount: () => mockUnsentCount,
   useCensuses: () => [
     {

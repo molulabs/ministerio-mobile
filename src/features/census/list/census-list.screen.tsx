@@ -14,6 +14,10 @@ type Props = {
   censuses: CensusListItem[];
   /** The catalogs the census form needs without signal were never downloaded on this phone. */
   offlineDataMissing: boolean;
+  /** Starts a census and opens it. */
+  onNewCensus: () => Promise<void>;
+  /** Opens a draft where it was left. */
+  onOpenDraft: (id: string) => void;
   /** Sends the finished censuses now. It comes in by props: the sync engine lives in src/app. */
   onSend: () => Promise<SendOutcome>;
   /** Development builds only: leaves a census ready to send, until the census form exists. */
@@ -21,6 +25,7 @@ type Props = {
 };
 
 const TAG_TONE: Record<CensusListItem['status'], 'ok' | 'warn' | 'bad' | 'mut'> = {
+  draft: 'mut',
   ready: 'mut',
   sent: 'ok',
   in_review: 'warn',
@@ -36,6 +41,8 @@ const hasDetail = (census: CensusListItem) =>
 export function CensusListScreen({
   censuses,
   offlineDataMissing,
+  onNewCensus,
+  onOpenDraft,
   onSend,
   onCreateTestCensus,
 }: Props) {
@@ -66,8 +73,12 @@ export function CensusListScreen({
           {texts.census.offlineDataMissing}
         </AlertBanner>
       )}
+      <Button icon="ti-plus" onClick={() => void onNewCensus()} aria-label={texts.census.newCensus}>
+        {texts.census.newCensus}
+      </Button>
       {pending && (
         <Button
+          tone="secondary"
           icon="ti-send"
           disabled={sending}
           onClick={() => void send()}
@@ -110,7 +121,13 @@ export function CensusListScreen({
               tag={
                 <Tag tone={TAG_TONE[census.status]}>{texts.census.list.status[census.status]}</Tag>
               }
-              onClick={hasDetail(census) ? () => setOpened(census) : undefined}
+              onClick={
+                census.status === 'draft'
+                  ? () => onOpenDraft(census.id)
+                  : hasDetail(census)
+                    ? () => setOpened(census)
+                    : undefined
+              }
             />
           ))}
         </ListGroup>

@@ -66,7 +66,8 @@ Offline-first Android app (iOS later) for the livestock/producer census of the M
 - A sent payload never changes: the API answers a repeated PUT only when the body is the same, and 409 otherwise.
 - `outbox.store.ts` only changes rows still `ready`, so a late answer never overwrites an earlier one.
 - `sendNow` has its own serial queue, so the "Enviar censos" button does not wait for a map download. `src/app/sync.ts` exports `sendCensusesNow()` (forced: it ignores the backoff).
-- The Censos tab (`features/census/list/census-list.screen.tsx`) lists the user's censuses live, grouped as Para revisar (`needs_fix`, `anomaly`), Pendientes de envío (`ready`) and Enviados (`sent`, `in_review`); tapping one the API answered opens what it said. Drafts are not listed until the census form exists.
+- The Censos tab (`features/census/list/census-list.screen.tsx`) lists the user's censuses live, grouped as Para revisar (`needs_fix`, `anomaly`), Borradores (`draft`), Pendientes de envío (`ready`) and Enviados (`sent`, `in_review`); tapping a draft opens it in the form, tapping one the API answered opens what it said.
+- The census form (`features/census/form/`) is the web's 8-step wizard. A draft is saved 500 ms after each change and when the form closes, with the step it was on (`form_step`), and opens there again. Finishing needs the date and the producer (name and document); the rest the API checks. Only drafts can be discarded.
 - Unsent = `draft` + `ready` + `needs_fix` (the badge and the sign-out warning). An `anomaly` is not counted: the phone can do nothing more with it.
 - Development builds have a "Crear censo de prueba" button (`__DEV__` only) that saves a made-up census (`features/census/testCensus.ts`, DNI 99000001) ready to send.
 

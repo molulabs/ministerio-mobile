@@ -10,6 +10,8 @@ export type MainTabsParamList = {
 export type RootStackParamList = {
   Login: undefined;
   Main: NavigatorScreenParams<MainTabsParamList>;
+  /** A census being taken, over the tabs. */
+  CensusForm: { id: string };
 };
 
 declare global {

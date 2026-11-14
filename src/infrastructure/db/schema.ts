@@ -116,6 +116,8 @@ export const censuses = sqliteTable(
     updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
     /** When the API answered 201 or 202. */
     sentAt: integer('sent_at', { mode: 'timestamp_ms' }),
+    /** The wizard step a draft was left on, to open it there again (draft). */
+    formStep: integer('form_step'),
   },
   (table) => [index('censuses_user_status_idx').on(table.userId, table.status)],
 );

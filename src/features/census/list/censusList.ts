@@ -1,9 +1,9 @@
 import type { CensusFieldError, CensusStatus } from '@/src/infrastructure/db/schema';
 
-/** A census as the list shows it. Drafts are not listed until the census form exists. */
+/** A census as the list shows it. */
 export type CensusListItem = {
   id: string;
-  status: Exclude<CensusStatus, 'draft'>;
+  status: CensusStatus;
   producer: string | null;
   /** "DNI 99000001", "CUIL 20-…": how the census identifies the producer. */
   document: string | null;
@@ -32,8 +32,7 @@ function describeDocument(type: unknown, number: unknown): string | null {
 }
 
 /** Reads what the list shows from the payload, which is whatever the form saved. */
-export function toListItem(row: CensusRow): CensusListItem | null {
-  if (row.status === 'draft') return null;
+export function toListItem(row: CensusRow): CensusListItem {
   const producer = (row.payload.producer ?? {}) as Record<string, unknown>;
   return {
     id: row.id,
@@ -46,11 +45,12 @@ export function toListItem(row: CensusRow): CensusListItem | null {
   };
 }
 
-export type CensusSectionKey = 'toCheck' | 'pending' | 'sent';
+export type CensusSectionKey = 'toCheck' | 'drafts' | 'pending' | 'sent';
 
 export type CensusSection = { key: CensusSectionKey; items: CensusListItem[] };
 
 const SECTION_OF: Record<CensusListItem['status'], CensusSectionKey> = {
+  draft: 'drafts',
   needs_fix: 'toCheck',
   anomaly: 'toCheck',
   ready: 'pending',
@@ -58,8 +58,8 @@ const SECTION_OF: Record<CensusListItem['status'], CensusSectionKey> = {
   in_review: 'sent',
 };
 
-/** What needs the enumerator first, then what is still on the phone, then what went out. */
-const SECTION_ORDER: CensusSectionKey[] = ['toCheck', 'pending', 'sent'];
+/** What needs the enumerator first, then what they are still taking, what is still on the phone, and what went out. */
+const SECTION_ORDER: CensusSectionKey[] = ['toCheck', 'drafts', 'pending', 'sent'];
 
 /** Groups the censuses by what the enumerator has to do, keeping their order; empty groups go. */
 export function groupCensuses(items: CensusListItem[]): CensusSection[] {

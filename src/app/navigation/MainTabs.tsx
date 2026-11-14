@@ -1,12 +1,15 @@
+import { useNavigation } from '@react-navigation/native';
 import { type BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import type { SessionUser } from '@/src/features/auth/auth.model';
 import { useSession } from '@/src/features/auth/session.store';
 import {
+  createDraft,
   saveReadyCensus,
   useCensuses,
   useUnsentCount,
 } from '@/src/features/census/census.repository';
+import { emptyCensusValues, toCensusPayload } from '@/src/features/census/form/censusForm.model';
 import { CensusListScreen } from '@/src/features/census/list/census-list.screen';
 import { testCensusPayload } from '@/src/features/census/testCensus';
 import { MapScreen } from '@/src/features/maps/screens/map.screen';
@@ -28,6 +31,7 @@ function CensusTab() {
 
 /** The census list of the signed-in user: a census is only ever shown to whoever took it. */
 function UserCensuses({ userId }: { userId: number }) {
+  const navigation = useNavigation();
   const censuses = useCensuses(userId);
   // The catalogs are what the census form needs without signal.
   const catalogsSyncedAt = useSyncState(syncKeys.catalogsSyncedAt);
@@ -39,6 +43,11 @@ function UserCensuses({ userId }: { userId: number }) {
     <CensusListScreen
       censuses={censuses}
       offlineDataMissing={catalogsSyncedAt === null}
+      onNewCensus={async () => {
+        const id = await createDraft(userId, toCensusPayload(emptyCensusValues(new Date())));
+        navigation.navigate('CensusForm', { id });
+      }}
+      onOpenDraft={(id) => navigation.navigate('CensusForm', { id })}
       onSend={sendCensusesNow}
       onCreateTestCensus={createTestCensus}
     />

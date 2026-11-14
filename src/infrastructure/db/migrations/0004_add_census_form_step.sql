@@ -1,0 +1,1 @@
+ALTER TABLE `censuses` ADD `form_step` integer;
