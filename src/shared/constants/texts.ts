@@ -71,7 +71,9 @@ export const texts = {
       noProducer: 'Productor sin nombre',
       close: 'Cerrar',
       needsFixTitle: 'Datos para corregir',
-      needsFix: 'El servidor no aceptó el censo por estos datos:',
+      needsFix:
+        'El servidor no aceptó el censo por estos datos. Corregilos en el teléfono y se vuelve a enviar.',
+      fix: 'Corregir',
       anomalyTitle: 'No se pudo registrar',
       anomaly:
         'El servidor no aceptó este censo y no se vuelve a enviar. Avisá a la oficina para que lo revisen.',
@@ -91,6 +93,7 @@ export const texts = {
         producer: 'El nombre y el documento del productor.',
         forestation: 'La especie y el tipo de cada fila de forestación (Insumos).',
       },
+      toFixTitle: 'El servidor no aceptó estos datos',
       finished: 'Censo listo para enviar',
       saved: (time: string) => `Guardado ${time}`,
       gone: 'Este censo ya no es un borrador.',

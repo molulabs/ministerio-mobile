@@ -41,9 +41,15 @@ describe('toListItem', () => {
     });
   });
 
-  it('keeps what the API said about the census', () => {
-    const errors = [{ field: 'producer.fullName', message: 'Este valor no debería estar vacío.' }];
-    expect(toListItem(row({ status: 'needs_fix', errors }))?.errors).toEqual(errors);
+  it('keeps what the API said about the census, with what the form calls each field', () => {
+    const errors = [
+      { field: 'producer.fullName', message: 'Este valor no debería estar vacío.' },
+      { field: 'producer.somethingNew', message: 'Este valor no es válido.' },
+    ];
+    expect(toListItem(row({ status: 'needs_fix', errors }))?.errors).toEqual([
+      { ...errors[0], label: 'Apellido y nombre' },
+      { ...errors[1], label: null },
+    ]);
   });
 
   it('leaves out what the payload does not have', () => {

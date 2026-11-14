@@ -33,6 +33,11 @@ export function stepOfField(field: string): number {
   return index === -1 ? 0 : index;
 }
 
+/** The step a census to fix opens on: the first one with a field the API rejected. */
+export function firstStepToFix(errors: { field: string }[]): number {
+  return errors.length === 0 ? 0 : Math.min(...errors.map((error) => stepOfField(error.field)));
+}
+
 /** A saved step number that still fits the steps (a draft from an older app may not). */
 export function clampStep(step: number | null | undefined): number {
   if (step === null || step === undefined || !Number.isInteger(step)) return 0;

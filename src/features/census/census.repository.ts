@@ -3,9 +3,11 @@ import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 
 import { uuidv7 } from '@/src/infrastructure/crypto/uuid';
 import { getDatabase } from '@/src/infrastructure/db/client';
-import { censuses, type CensusStatus } from '@/src/infrastructure/db/schema';
+import { type CensusFieldError, censuses, type CensusStatus } from '@/src/infrastructure/db/schema';
 
 import { type CensusPayload, SCHEMA_VERSION } from './form/censusForm.model';
+import { firstStepToFix } from './form/censusForm.steps';
+import { labelOfField } from './form/fieldLabels';
 import { type CensusListItem, toListItem } from './list/censusList';
 
 /** Saves a finished census of the user, ready for the sync engine to send. Returns its id. */
@@ -88,12 +90,17 @@ export async function createDraft(userId: number, payload: CensusPayload): Promi
   return id;
 }
 
-export type Draft = { payload: Record<string, unknown>; formStep: number | null };
+export type Draft = {
+  payload: Record<string, unknown>;
+  formStep: number | null;
+  /** What the API rejected, when the draft is a census reopened to fix. */
+  errors: CensusFieldError[] | null;
+};
 
 /** One of the user's drafts, or null when it is not a draft of theirs (finished, discarded, another user's). */
 export async function getDraft(id: string, userId: number): Promise<Draft | null> {
   const rows = await getDatabase()
-    .select({ payload: censuses.payload, formStep: censuses.formStep })
+    .select({ payload: censuses.payload, formStep: censuses.formStep, errors: censuses.errors })
     .from(censuses)
     .where(draftOf(id, userId));
   return rows[0] ?? null;
@@ -125,9 +132,55 @@ export async function finishDraft(
       schemaVersion: SCHEMA_VERSION,
       status: 'ready',
       formStep: null,
+      // What the API said was of the census as it was: this one goes as fixed.
+      errors: null,
       updatedAt: new Date(),
     })
     .where(draftOf(id, userId));
+}
+
+/**
+ * Turns a census the API rejected (needs_fix) into a draft to fix on the phone, opened on the
+ * first step with an error. The draft gets a new id, so the fixed census is a new PUT: an id the
+ * API has seen never goes with another body. Copying it and deleting the rejected one happen in
+ * one transaction, so the census is always on the phone once. Returns the draft's id, or null
+ * when there is no such census of the user (already reopened, or another user's).
+ */
+export function reopenToFix(id: string, userId: number): string | null {
+  return getDatabase().transaction((tx) => {
+    const rejected = tx
+      .select({ payload: censuses.payload, errors: censuses.errors })
+      .from(censuses)
+      .where(
+        and(eq(censuses.id, id), eq(censuses.userId, userId), eq(censuses.status, 'needs_fix')),
+      )
+      .get();
+    if (!rejected) return null;
+
+    // Named now, against the payload the API rejected: fixing the draft may move the rows of a
+    // list ("forestSpecies[1]"), and the name says which one the API meant.
+    const errors = (rejected.errors ?? []).map((error) => ({
+      ...error,
+      label: labelOfField(error.field, rejected.payload),
+    }));
+    const draftId = uuidv7();
+    const now = new Date();
+    tx.insert(censuses)
+      .values({
+        id: draftId,
+        userId,
+        schemaVersion: SCHEMA_VERSION,
+        payload: rejected.payload,
+        errors,
+        status: 'draft',
+        formStep: firstStepToFix(errors),
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
+    tx.delete(censuses).where(eq(censuses.id, id)).run();
+    return draftId;
+  });
 }
 
 /** Deletes a draft the user chose to throw away. Never anything else: field data is never lost. */

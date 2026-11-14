@@ -19,6 +19,7 @@ const nothingSent = { sent: 0, inReview: 0, needsFix: 0, anomalies: 0, waiting: 
 
 const mockNewCensus = jest.fn().mockResolvedValue(undefined);
 const mockOpenDraft = jest.fn();
+const mockFix = jest.fn().mockResolvedValue(undefined);
 
 function renderScreen(
   censuses: CensusListItem[],
@@ -31,6 +32,7 @@ function renderScreen(
         offlineDataMissing={false}
         onNewCensus={mockNewCensus}
         onOpenDraft={mockOpenDraft}
+        onFix={mockFix}
         onSend={onSend}
       />
     </ToastProvider>,
@@ -95,6 +97,44 @@ describe('CensusListScreen', () => {
     expect(screen.getByText('producer.fullName')).toBeOnTheScreen();
   });
 
+  it('reopens a census to fix on the phone', async () => {
+    await renderScreen([
+      census({
+        status: 'needs_fix',
+        errors: [{ field: 'producer.fullName', message: 'Este valor no debería estar vacío.' }],
+      }),
+    ]);
+
+    await fireEvent.press(screen.getByRole('button', { name: /Rosa Quispe/ }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Corregir' }));
+
+    expect(mockFix).toHaveBeenCalledWith('01a1d70a-496a-7a5e-bf6a-29b1b22455f3');
+  });
+
+  it('offers nothing to fix for a census the API refused', async () => {
+    await renderScreen([census({ status: 'anomaly' })]);
+
+    await fireEvent.press(screen.getByRole('button', { name: /Rosa Quispe/ }));
+
+    expect(screen.queryByRole('button', { name: 'Corregir' })).toBeNull();
+  });
+
+  it('tells a census being fixed from a new draft, and opens it', async () => {
+    await renderScreen([
+      census({
+        status: 'draft',
+        errors: [{ field: 'producer.fullName', message: 'Este valor no debería estar vacío.' }],
+      }),
+    ]);
+
+    expect(screen.getByText('Borradores')).toBeOnTheScreen();
+    expect(screen.getByText('A corregir')).toBeOnTheScreen();
+    expect(screen.queryByText('Borrador')).toBeNull();
+
+    await fireEvent.press(screen.getByRole('button', { name: /Rosa Quispe/ }));
+    expect(mockOpenDraft).toHaveBeenCalledWith('01a1d70a-496a-7a5e-bf6a-29b1b22455f3');
+  });
+
   it('says a census the API refused is not sent again', async () => {
     await renderScreen([census({ status: 'anomaly' })]);
 
@@ -147,6 +187,7 @@ describe('CensusListScreen', () => {
           offlineDataMissing
           onNewCensus={mockNewCensus}
           onOpenDraft={mockOpenDraft}
+          onFix={mockFix}
           onSend={jest.fn()}
         />
       </ToastProvider>,

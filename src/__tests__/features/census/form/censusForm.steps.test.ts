@@ -1,4 +1,9 @@
-import { CENSUS_STEPS, clampStep, stepOfField } from '@/src/features/census/form/censusForm.steps';
+import {
+  CENSUS_STEPS,
+  clampStep,
+  firstStepToFix,
+  stepOfField,
+} from '@/src/features/census/form/censusForm.steps';
 
 describe('censusForm.steps', () => {
   it('has the steps of the web, in its order', () => {
@@ -37,5 +42,17 @@ describe('censusForm.steps', () => {
     expect(clampStep(3)).toBe(3);
     expect(clampStep(12)).toBe(7);
     expect(clampStep(-1)).toBe(0);
+  });
+
+  it('opens a census to fix on the first step with a rejected field', () => {
+    expect(
+      firstStepToFix([
+        { field: 'crops.plots[0].hectares' },
+        { field: 'productionUnit.totalHectares' },
+        { field: 'observations' },
+      ]),
+    ).toBe(2);
+    expect(firstStepToFix([{ field: 'productionUnit.renspa' }])).toBe(0);
+    expect(firstStepToFix([])).toBe(0);
   });
 });

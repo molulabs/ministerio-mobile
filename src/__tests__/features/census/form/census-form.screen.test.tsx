@@ -29,7 +29,11 @@ jest.mock('@/src/infrastructure/location/currentLocation', () => ({
 const ID = '01a1d70a-496a-7a5e-bf6a-29b1b22455f3';
 const producer = { fullName: 'Rosa Quispe', documentType: 'DNI', documentNumber: '30111222' };
 
-const draft = (payload: Record<string, unknown> = {}, formStep: number | null = 0) => ({
+const draft = (
+  payload: Record<string, unknown> = {},
+  formStep: number | null = 0,
+  errors: { field: string; message: string }[] | null = null,
+) => ({
   payload: {
     schemaVersion: 2,
     date: '2026-11-13',
@@ -38,6 +42,7 @@ const draft = (payload: Record<string, unknown> = {}, formStep: number | null = 
     ...payload,
   },
   formStep,
+  errors,
 });
 
 async function renderForm(onClose = jest.fn()) {
@@ -127,6 +132,37 @@ describe('CensusFormScreen', () => {
       }),
     );
     expect(screen.getByText('Censo listo para enviar')).toBeOnTheScreen();
+  });
+
+  describe('a census reopened to fix', () => {
+    const errors = [
+      { field: 'producer.documentNumber', message: 'El documento no es válido.' },
+      { field: 'livestock.cattleCowsOwn', message: 'La cantidad no puede ser negativa.' },
+    ];
+
+    it('shows on each step what the API rejected of it', async () => {
+      mockGetDraft.mockResolvedValue(draft({ producer }, 3, errors));
+      await renderForm();
+
+      expect(await screen.findByText('El servidor no aceptó estos datos')).toBeOnTheScreen();
+      expect(screen.getByText('La cantidad no puede ser negativa.')).toBeOnTheScreen();
+      expect(screen.queryByText('El documento no es válido.')).toBeNull();
+
+      await fireEvent.press(screen.getByRole('button', { name: 'Siguiente' }));
+      expect(screen.queryByText('El servidor no aceptó estos datos')).toBeNull();
+    });
+
+    it('shows all of it on the summary, and finishes it', async () => {
+      mockGetDraft.mockResolvedValue(draft({ producer }, 7, errors));
+      const onClose = await renderForm();
+
+      expect(await screen.findByText(/El documento no es válido\./)).toBeOnTheScreen();
+      expect(screen.getByText(/La cantidad no puede ser negativa\./)).toBeOnTheScreen();
+
+      await fireEvent.press(screen.getByRole('button', { name: 'Terminar censo' }));
+      await waitFor(() => expect(onClose).toHaveBeenCalled());
+      expect(mockFinishDraft).toHaveBeenCalled();
+    });
   });
 
   it('discards the draft only after asking', async () => {

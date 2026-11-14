@@ -8,28 +8,19 @@ import { YesNoField } from '@/src/shared/ui/YesNoField';
 import { NumberField } from '../../fields/NumberField';
 import { BreedsField } from './BreedsField';
 import {
-  CATTLE_ROWS,
-  EQUINE_ROWS,
-  GOAT_PRACTICES,
-  GOAT_ROWS,
+  CATTLE,
+  EQUINES,
+  GOATS,
   keysOf,
   LIVESTOCK_TEXTS as T,
-  LLAMA_PRACTICES,
-  LLAMA_ROWS,
-  PIG_ROWS,
+  LLAMAS,
+  PIGS,
   POULTRY_FIELDS,
+  SHEEP,
   SHEEP_ORIENTATION_OPTIONS,
-  SHEEP_ROWS,
-  type SpeciesRow,
+  type Species,
 } from './livestock.constants';
-import {
-  type BreedKey,
-  type CountKey,
-  declaredTotalDiffers,
-  type LivestockValues,
-  sum,
-  type YesNoKey,
-} from './livestock.helper';
+import { declaredTotalDiffers, type LivestockValues, sum } from './livestock.helper';
 import { SpeciesCounts } from './SpeciesCounts';
 
 type Props = {
@@ -45,7 +36,7 @@ export function LivestockStep({ values, onChange }: Props) {
   const set = (patch: Partial<LivestockValues>) => onChange({ ...values, ...patch });
 
   const species = (props: Omit<SpeciesProps, 'values' | 'set'>) => (
-    <Species {...props} values={values} set={set} />
+    <SpeciesSection {...props} values={values} set={set} />
   );
 
   return (
@@ -58,19 +49,11 @@ export function LivestockStep({ values, onChange }: Props) {
 
       {values.hasLivestockActivity && (
         <>
-          {species({
-            title: 'Bovinos',
-            question: '¿Posee bovinos?',
-            hasKey: 'hasCattle',
-            rows: CATTLE_ROWS,
-            name: 'bovinos',
-            breeds: { key: 'cattleBreeds', species: 'CATTLE' },
-            declaredKey: 'cattleDeclaredTotal',
-          })}
+          {species(CATTLE)}
 
-          <SectionHeader title="Aves de corral" />
+          <SectionHeader title={T.poultry} />
           <YesNoField
-            label="¿Posee aves de corral?"
+            label={T.hasPoultry}
             value={values.hasPoultry}
             onChange={(hasPoultry) => set({ hasPoultry })}
           />
@@ -102,13 +85,7 @@ export function LivestockStep({ values, onChange }: Props) {
           )}
 
           {species({
-            title: 'Ovinos',
-            question: '¿Posee ovinos?',
-            hasKey: 'hasSheep',
-            rows: SHEEP_ROWS,
-            name: 'ovinos',
-            breeds: { key: 'sheepBreeds', species: 'SHEEP' },
-            declaredKey: 'sheepDeclaredTotal',
+            ...SHEEP,
             extra: (
               <Field label={T.sheepOrientation}>
                 <MultiChoice
@@ -121,24 +98,10 @@ export function LivestockStep({ values, onChange }: Props) {
             ),
           })}
 
-          {species({
-            title: 'Caprinos',
-            question: '¿Posee caprinos?',
-            hasKey: 'hasGoats',
-            rows: GOAT_ROWS,
-            name: 'caprinos',
-            breeds: { key: 'goatBreeds', species: 'GOAT' },
-            declaredKey: 'goatDeclaredTotal',
-            practices: GOAT_PRACTICES,
-          })}
+          {species(GOATS)}
 
           {species({
-            title: 'Llamas',
-            question: '¿Posee llamas?',
-            hasKey: 'hasLlamas',
-            rows: LLAMA_ROWS,
-            name: 'llamas',
-            declaredKey: 'llamaDeclaredTotal',
+            ...LLAMAS,
             extra: (
               <TextField
                 label={T.otherCamelids}
@@ -146,49 +109,26 @@ export function LivestockStep({ values, onChange }: Props) {
                 onChangeText={(llamaOtherCamelidsDetail) => set({ llamaOtherCamelidsDetail })}
               />
             ),
-            practices: LLAMA_PRACTICES,
           })}
 
-          {species({
-            title: 'Porcinos',
-            question: '¿Posee porcinos?',
-            hasKey: 'hasPigs',
-            rows: PIG_ROWS,
-            name: 'porcinos',
-            breeds: { key: 'pigBreeds', species: 'PIG' },
-            declaredKey: 'pigDeclaredTotal',
-          })}
+          {species(PIGS)}
 
-          {species({
-            title: 'Equinos y asnales',
-            question: '¿Posee equinos o asnales?',
-            hasKey: 'hasEquines',
-            rows: EQUINE_ROWS,
-          })}
+          {species(EQUINES)}
         </>
       )}
     </>
   );
 }
 
-type SpeciesProps = {
-  title: string;
-  question: string;
-  hasKey: YesNoKey;
-  rows: SpeciesRow[];
-  /** For the totals, "bovinos"; a species without totals has none. */
-  name?: string;
-  breeds?: { key: BreedKey; species: string };
-  declaredKey?: CountKey;
+type SpeciesProps = Species & {
   /** What the species asks besides the counts, after the totals. */
   extra?: ReactNode;
-  practices?: { key: YesNoKey; label: string }[];
   values: LivestockValues;
   set: (patch: Partial<LivestockValues>) => void;
 };
 
 /** One species: whether the farm has it and, if so, its counts, totals, breeds and practices. */
-function Species({
+function SpeciesSection({
   title,
   question,
   hasKey,

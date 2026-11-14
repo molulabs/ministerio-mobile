@@ -1,5 +1,7 @@
 import type { CensusFieldError, CensusStatus } from '@/src/infrastructure/db/schema';
 
+import { labelOfField } from '../form/fieldLabels';
+
 /** A census as the list shows it. */
 export type CensusListItem = {
   id: string;
@@ -40,7 +42,12 @@ export function toListItem(row: CensusRow): CensusListItem {
     producer: stringOrNull(producer.fullName),
     document: describeDocument(producer.documentType, producer.documentNumber),
     date: stringOrNull(row.payload.date),
-    errors: row.errors ?? [],
+    // A census to fix still has the payload the API rejected; a draft being fixed keeps the
+    // names given when it was reopened.
+    errors: (row.errors ?? []).map((error) => ({
+      ...error,
+      label: error.label ?? labelOfField(error.field, row.payload),
+    })),
     conflict: row.conflict,
   };
 }

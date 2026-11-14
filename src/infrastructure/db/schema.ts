@@ -86,7 +86,13 @@ export const mapPackages = sqliteTable('map_packages', {
 export type CensusStatus = 'draft' | 'ready' | 'sent' | 'in_review' | 'needs_fix' | 'anomaly';
 
 /** One error of a 422, as the API gives it: the field is a path, as "livestock.cattleCowsOwn". */
-export type CensusFieldError = { field: string; message: string };
+export type CensusFieldError = {
+  /** Where the API found it, as it names it: "productionUnit.totalHectares". */
+  field: string;
+  message: string;
+  /** What the form calls the field, when the phone knows it: "Hectáreas totales". */
+  label?: string | null;
+};
 
 export const censuses = sqliteTable(
   'censuses',

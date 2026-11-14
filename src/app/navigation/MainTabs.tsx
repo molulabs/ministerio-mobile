@@ -5,6 +5,7 @@ import type { SessionUser } from '@/src/features/auth/auth.model';
 import { useSession } from '@/src/features/auth/session.store';
 import {
   createDraft,
+  reopenToFix,
   saveReadyCensus,
   useCensuses,
   useUnsentCount,
@@ -48,6 +49,10 @@ function UserCensuses({ userId }: { userId: number }) {
         navigation.navigate('CensusForm', { id });
       }}
       onOpenDraft={(id) => navigation.navigate('CensusForm', { id })}
+      onFix={async (id) => {
+        const draftId = reopenToFix(id, userId);
+        if (draftId) navigation.navigate('CensusForm', { id: draftId });
+      }}
       onSend={sendCensusesNow}
       onCreateTestCensus={createTestCensus}
     />

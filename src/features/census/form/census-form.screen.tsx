@@ -15,6 +15,7 @@ import { StatusBar } from 'expo-status-bar';
 import { type ComponentRef, type ReactNode, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 
+import type { CensusFieldError } from '@/src/infrastructure/db/schema';
 import { texts } from '@/src/shared/constants/texts';
 import { Screen } from '@/src/shared/ui/Screen';
 import { TextareaField } from '@/src/shared/ui/TextareaField';
@@ -27,7 +28,7 @@ import {
   missingToFinish,
   toCensusPayload,
 } from './censusForm.model';
-import { CENSUS_STEPS, clampStep, LAST_STEP } from './censusForm.steps';
+import { CENSUS_STEPS, clampStep, LAST_STEP, stepOfField } from './censusForm.steps';
 import { FamilyFinancesStep } from './steps/familyFinances/FamilyFinancesStep';
 import { CropsStep } from './steps/crops/CropsStep';
 import { FarmInputsStep } from './steps/farmInputs/FarmInputsStep';
@@ -48,7 +49,12 @@ type Props = {
   onClose: () => void;
 };
 
-type Loaded = { values: CensusFormValues; step: number };
+type Loaded = {
+  values: CensusFormValues;
+  step: number;
+  /** What the API rejected, when the census was reopened to fix. */
+  errors: CensusFieldError[];
+};
 
 /** A census being taken: the web's wizard, saved on the phone as the enumerator goes. */
 export function CensusFormScreen({ id, userId, onClose }: Props) {
@@ -60,7 +66,11 @@ export function CensusFormScreen({ id, userId, onClose }: Props) {
       if (!active) return;
       setLoaded(
         draft
-          ? { values: fromCensusPayload(draft.payload), step: clampStep(draft.formStep) }
+          ? {
+              values: fromCensusPayload(draft.payload),
+              step: clampStep(draft.formStep),
+              errors: draft.errors ?? [],
+            }
           : 'gone',
       );
     });
@@ -163,6 +173,11 @@ function CensusWizard({ id, userId, initial, onClose }: Props & { initial: Loade
 
   const form = texts.census.form;
   const current = CENSUS_STEPS[step];
+  // On each step, what the API rejected of it; on the summary, all of it.
+  const toFix =
+    step === LAST_STEP
+      ? initial.errors
+      : initial.errors.filter((error) => stepOfField(error.field) === step);
 
   return (
     <Frame onBack={onClose} onDiscard={() => setDiscarding(true)}>
@@ -194,6 +209,13 @@ function CensusWizard({ id, userId, initial, onClose }: Props & { initial: Loade
               : undefined
           }
         >
+          {toFix.length > 0 && (
+            <AlertBanner tone="danger" title={form.toFixTitle}>
+              {toFix
+                .map((error) => (error.label ? `${error.label}: ${error.message}` : error.message))
+                .join('\n')}
+            </AlertBanner>
+          )}
           {current.key === 'producer' && (
             <>
               <Field label={form.date} required>

@@ -18,6 +18,8 @@ type Props = {
   onNewCensus: () => Promise<void>;
   /** Opens a draft where it was left. */
   onOpenDraft: (id: string) => void;
+  /** Reopens a census the API rejected as a draft, and opens it. */
+  onFix: (id: string) => Promise<void>;
   /** Sends the finished censuses now. It comes in by props: the sync engine lives in src/app. */
   onSend: () => Promise<SendOutcome>;
   /** Development builds only: leaves a census ready to send, until the census form exists. */
@@ -37,12 +39,17 @@ const TAG_TONE: Record<CensusListItem['status'], 'ok' | 'warn' | 'bad' | 'mut'> 
 const hasDetail = (census: CensusListItem) =>
   census.status === 'needs_fix' || census.status === 'anomaly' || census.status === 'in_review';
 
+/** A draft that is a census the API rejected, being fixed: it says so, not "Borrador". */
+const isBeingFixed = (census: CensusListItem) =>
+  census.status === 'draft' && census.errors.length > 0;
+
 /** The censuses on the phone, by what the enumerator has to do with them, and the send button. */
 export function CensusListScreen({
   censuses,
   offlineDataMissing,
   onNewCensus,
   onOpenDraft,
+  onFix,
   onSend,
   onCreateTestCensus,
 }: Props) {
@@ -119,7 +126,13 @@ export function CensusListScreen({
               title={census.producer ?? texts.census.list.noProducer}
               meta={describe(census)}
               tag={
-                <Tag tone={TAG_TONE[census.status]}>{texts.census.list.status[census.status]}</Tag>
+                isBeingFixed(census) ? (
+                  <Tag tone="warn">{texts.census.list.status.needs_fix}</Tag>
+                ) : (
+                  <Tag tone={TAG_TONE[census.status]}>
+                    {texts.census.list.status[census.status]}
+                  </Tag>
+                )
               }
               onClick={
                 census.status === 'draft'
@@ -132,7 +145,14 @@ export function CensusListScreen({
           ))}
         </ListGroup>
       ))}
-      <CensusDetailSheet census={opened} onClose={() => setOpened(null)} />
+      <CensusDetailSheet
+        census={opened}
+        onClose={() => setOpened(null)}
+        onFix={(id) => {
+          setOpened(null);
+          void onFix(id);
+        }}
+      />
     </Screen>
   );
 }
