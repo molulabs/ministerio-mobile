@@ -1,5 +1,4 @@
-import { Field, SegmentedControl } from '@molulabs/ds';
-import { View } from 'react-native';
+import { SegmentedField } from './SegmentedField';
 
 type Props = {
   label: string;
@@ -15,18 +14,6 @@ const OPTIONS = [
 ];
 
 /** A Sí/No question of a form that is saved (the web's YesNoToggle). */
-export function YesNoField({ label, value, onChange, hint, error }: Props) {
-  return (
-    <Field label={label} hint={hint} error={error}>
-      {/* The question names the Sí and No it holds, for a screen reader. */}
-      <View accessibilityRole="radiogroup" accessibilityLabel={label}>
-        <SegmentedControl
-          value={value}
-          onChange={(next: boolean) => onChange(next)}
-          options={OPTIONS}
-          invalid={!!error}
-        />
-      </View>
-    </Field>
-  );
+export function YesNoField(props: Props) {
+  return <SegmentedField {...props} options={OPTIONS} />;
 }

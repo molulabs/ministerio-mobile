@@ -90,6 +90,7 @@ export const texts = {
       missing: {
         date: 'La fecha del censo.',
         producer: 'El nombre y el documento del productor.',
+        forestation: 'La especie y el tipo de cada fila de forestación (Insumos).',
       },
       finished: 'Censo listo para enviar',
       saved: (time: string) => `Guardado ${time}`,

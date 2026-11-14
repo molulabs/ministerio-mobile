@@ -5,7 +5,7 @@ import {
   asText as text,
   type LocalityRef,
   textOrNull,
-  toLocalityRef,
+  toCatalogRef,
   toNumber as toCoordinate,
 } from '../../fields/fields.helper';
 import { CUIL_DIGITS } from './producer.constants';
@@ -142,7 +142,7 @@ export function fromProducerPayload(section: Record<string, unknown>): ProducerV
     street: text(section.street),
     number: text(section.number),
     department: text(section.department),
-    locality: toLocalityRef(section.localityId),
+    locality: toCatalogRef(section.localityId),
     postalCode: text(section.postalCode),
     paraje: text(section.paraje),
     community: text(section.community),

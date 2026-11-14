@@ -2,7 +2,7 @@ import {
   asText,
   type LocalityRef,
   textOrNull,
-  toLocalityRef,
+  toCatalogRef,
   toNumber,
 } from '../../fields/fields.helper';
 
@@ -92,7 +92,7 @@ export function fromProductionUnitPayload(section: Record<string, unknown>): Pro
     street: asText(section.street),
     number: asText(section.number),
     department: asText(section.department),
-    locality: toLocalityRef(section.localityId),
+    locality: toCatalogRef(section.localityId),
     paraje: asText(section.paraje),
     latitude: asText(section.latitude),
     longitude: asText(section.longitude),

@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { Text } from '@/src/shared/ui/Text';
 import { TextField } from '@/src/shared/ui/TextField';
 
+import { NumberField } from '../../fields/NumberField';
 import { BreedsField } from './BreedsField';
 import { LIVESTOCK_TEXTS as T, type SpeciesRow } from './livestock.constants';
 import type { LivestockValues } from './livestock.helper';
@@ -22,7 +23,7 @@ export function SpeciesCounts({ rows, values, onChange }: Props) {
           <Text variant="subtitle">{row.label}</Text>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <View style={{ flex: 1 }}>
-              <CountField
+              <NumberField
                 label={`${row.label}: ${T.own}`}
                 shown={T.own}
                 value={values[row.ownKey]}
@@ -30,7 +31,7 @@ export function SpeciesCounts({ rows, values, onChange }: Props) {
               />
             </View>
             <View style={{ flex: 1 }}>
-              <CountField
+              <NumberField
                 label={`${row.label}: ${T.thirdParty}`}
                 shown={T.thirdParty}
                 value={values[row.thirdPartyKey]}
@@ -56,35 +57,5 @@ export function SpeciesCounts({ rows, values, onChange }: Props) {
         </View>
       ))}
     </>
-  );
-}
-
-/**
- * A count of animals. On screen it says only "Propios" or "De terceros", under the kind of
- * animal; a screen reader hears both.
- */
-export function CountField({
-  label,
-  shown,
-  value,
-  onChange,
-  error,
-}: {
-  label: string;
-  shown?: string;
-  value: string;
-  onChange: (value: string) => void;
-  error?: string;
-}) {
-  return (
-    <TextField
-      label={shown ?? label}
-      accessibilityLabel={label}
-      value={value}
-      onChangeText={onChange}
-      keyboardType="number-pad"
-      error={error}
-      mono
-    />
   );
 }

@@ -5,6 +5,7 @@ import { Text } from '@/src/shared/ui/Text';
 import { TextField } from '@/src/shared/ui/TextField';
 import { YesNoField } from '@/src/shared/ui/YesNoField';
 
+import { NumberField } from '../../fields/NumberField';
 import { BreedsField } from './BreedsField';
 import {
   CATTLE_ROWS,
@@ -29,7 +30,7 @@ import {
   sum,
   type YesNoKey,
 } from './livestock.helper';
-import { CountField, SpeciesCounts } from './SpeciesCounts';
+import { SpeciesCounts } from './SpeciesCounts';
 
 type Props = {
   values: LivestockValues;
@@ -76,7 +77,7 @@ export function LivestockStep({ values, onChange }: Props) {
           {values.hasPoultry && (
             <>
               {POULTRY_FIELDS.map((field) => (
-                <CountField
+                <NumberField
                   key={field.key}
                   label={field.label}
                   value={values[field.key]}
@@ -223,7 +224,7 @@ function Species({
             />
           )}
           {declaredKey && name && (
-            <CountField
+            <NumberField
               label={T.declaredTotal(name)}
               value={values[declaredKey]}
               onChange={(count) => set({ [declaredKey]: count })}

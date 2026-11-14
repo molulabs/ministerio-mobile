@@ -29,12 +29,23 @@ import {
   toCensusPayload,
 } from './censusForm.model';
 import { CENSUS_STEPS, clampStep, LAST_STEP } from './censusForm.steps';
+import { CropsStep } from './steps/crops/CropsStep';
+import { FarmInputsStep } from './steps/farmInputs/FarmInputsStep';
+import { InfrastructureStep } from './steps/infrastructure/InfrastructureStep';
 import { LivestockStep } from './steps/livestock/LivestockStep';
 import { ProducerStep } from './steps/producer/ProducerStep';
 import { ProductionUnitStep } from './steps/productionUnit/ProductionUnitStep';
 
 /** The steps the app has; the rest say so and keep what the census has of them. */
-const BUILT_STEPS = new Set<string>(['producer', 'productionUnit', 'livestock', 'summary']);
+const BUILT_STEPS = new Set<string>([
+  'producer',
+  'productionUnit',
+  'livestock',
+  'crops',
+  'farmInputs',
+  'infrastructure',
+  'summary',
+]);
 
 /** How long the form waits after the last change before saving the draft. */
 const SAVE_DELAY_MS = 500;
@@ -223,6 +234,21 @@ function CensusWizard({ id, userId, initial, onClose }: Props & { initial: Loade
             <LivestockStep
               values={values.livestock}
               onChange={(livestock) => change({ livestock })}
+            />
+          )}
+          {current.key === 'crops' && (
+            <CropsStep values={values.crops} onChange={(crops) => change({ crops })} />
+          )}
+          {current.key === 'farmInputs' && (
+            <FarmInputsStep
+              values={values.farmInputs}
+              onChange={(farmInputs) => change({ farmInputs })}
+            />
+          )}
+          {current.key === 'infrastructure' && (
+            <InfrastructureStep
+              values={values.infrastructure}
+              onChange={(infrastructure) => change({ infrastructure })}
             />
           )}
           {!BUILT_STEPS.has(current.key) && <Text variant="muted">{form.notYet}</Text>}

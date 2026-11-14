@@ -17,7 +17,7 @@ export const asText = (value: unknown) =>
   typeof value === 'string' ? value : typeof value === 'number' ? String(value) : '';
 
 /** A saved catalog reference, or null when it is none. */
-export function toLocalityRef(value: unknown): LocalityRef {
+export function toCatalogRef(value: unknown): CatalogRef | null {
   if (typeof value === 'number' && Number.isInteger(value)) return value;
   if (typeof value === 'object' && value !== null && 'name' in value) {
     const name = (value as { name: unknown }).name;
@@ -29,7 +29,7 @@ export function toLocalityRef(value: unknown): LocalityRef {
 /** A saved list of catalog references, without whatever is not one. */
 export const toCatalogRefs = (value: unknown): CatalogRef[] =>
   Array.isArray(value)
-    ? value.map(toLocalityRef).filter((ref): ref is CatalogRef => ref !== null)
+    ? value.map(toCatalogRef).filter((ref): ref is CatalogRef => ref !== null)
     : [];
 
 /** A count of animals as typed: its digits, or none. */

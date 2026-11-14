@@ -2,7 +2,12 @@ import { asc, eq, or, type SQL, sql, type SQLWrapper } from 'drizzle-orm';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 
 import { getDatabase } from '@/src/infrastructure/db/client';
-import { livestockBreeds, localities, producerIndex } from '@/src/infrastructure/db/schema';
+import {
+  forestSpecies,
+  livestockBreeds,
+  localities,
+  producerIndex,
+} from '@/src/infrastructure/db/schema';
 
 /** How many producers a search shows: enough to pick from, few enough to read. */
 const PRODUCER_RESULTS = 30;
@@ -10,6 +15,7 @@ const PRODUCER_RESULTS = 30;
 export type IndexedProducer = { documentNumber: string; fullName: string };
 export type Locality = { id: number; name: string };
 export type Breed = { id: number; name: string };
+export type ForestSpecies = { id: number; name: string };
 
 /** The column has the text anywhere, with LIKE's own wildcards (% and _) taken as plain characters. */
 const contains = (column: SQLWrapper, text: string): SQL =>
@@ -70,6 +76,17 @@ export function useBreeds(species: string): Breed[] {
       .where(eq(livestockBreeds.species, species))
       .orderBy(asc(livestockBreeds.name)),
     [species],
+  );
+  return data;
+}
+
+/** The forest species on the phone, by name. */
+export function useForestSpecies(): ForestSpecies[] {
+  const { data } = useLiveQuery(
+    getDatabase()
+      .select({ id: forestSpecies.id, name: forestSpecies.name })
+      .from(forestSpecies)
+      .orderBy(asc(forestSpecies.name)),
   );
   return data;
 }

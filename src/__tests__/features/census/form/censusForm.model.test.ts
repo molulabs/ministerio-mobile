@@ -9,6 +9,12 @@ import {
   EMPTY_FARM,
   EMPTY_PRODUCER,
 } from '@/src/features/census/form/steps/producer/producer.helper';
+import { EMPTY_CROPS, withPlot } from '@/src/features/census/form/steps/crops/crops.helper';
+import {
+  EMPTY_FARM_INPUTS,
+  newForestRow,
+} from '@/src/features/census/form/steps/farmInputs/farmInputs.helper';
+import { EMPTY_INFRASTRUCTURE } from '@/src/features/census/form/steps/infrastructure/infrastructure.helper';
 import { EMPTY_LIVESTOCK } from '@/src/features/census/form/steps/livestock/livestock.helper';
 import { EMPTY_PRODUCTION_UNIT } from '@/src/features/census/form/steps/productionUnit/productionUnit.helper';
 
@@ -55,9 +61,9 @@ describe('censusForm.model', () => {
         drinkingWater: false,
       }),
       livestock: expect.objectContaining({ hasLivestockActivity: false, cattleBreedIds: [] }),
-      crops: {},
-      farmInputs: {},
-      infrastructure: {},
+      crops: expect.objectContaining({ hasCropActivity: false, plots: [] }),
+      farmInputs: expect.objectContaining({ fertilizers: null, forestSpecies: [] }),
+      infrastructure: expect.objectContaining({ tractors: null, commercializationChannels: null }),
     });
   });
 
@@ -82,7 +88,17 @@ describe('censusForm.model', () => {
         hasCattle: true,
         cattleCowsOwn: '4',
       },
-      sections: { ...emptyCensusValues(new Date()).sections, crops: { hasCropActivity: true } },
+      crops: withPlot({ ...EMPTY_CROPS, hasCropActivity: true }, 'vegetable_garlic', {
+        hectares: '1.5',
+        rows: '20',
+      }),
+      farmInputs: { ...EMPTY_FARM_INPUTS, fertilizers: ['urea'], usesHerbicides: true },
+      infrastructure: {
+        ...EMPTY_INFRASTRUCTURE,
+        tractors: '2',
+        commercializationChannels: ['ferias'],
+      },
+      sections: { familyFinances: { totalMembers: 4 } },
     };
 
     expect(fromCensusPayload(toCensusPayload(values))).toEqual(values);
@@ -98,6 +114,9 @@ describe('censusForm.model', () => {
       farm: EMPTY_FARM,
       productionUnit: EMPTY_PRODUCTION_UNIT,
       livestock: EMPTY_LIVESTOCK,
+      crops: EMPTY_CROPS,
+      farmInputs: EMPTY_FARM_INPUTS,
+      infrastructure: EMPTY_INFRASTRUCTURE,
       sections: emptyCensusValues(new Date()).sections,
     });
   });
@@ -115,5 +134,17 @@ describe('censusForm.model', () => {
       producer: { ...producer, documentNumber: '  ' },
     };
     expect(missingToFinish(values)).toEqual(['producer']);
+  });
+
+  it('cannot finish with a forest row the API would not take: it would be left out', () => {
+    const values = {
+      ...emptyCensusValues(new Date()),
+      producer,
+      farmInputs: {
+        ...EMPTY_FARM_INPUTS,
+        forestSpecies: [newForestRow(), newForestRow({ quantity: '30' })],
+      },
+    };
+    expect(missingToFinish(values)).toEqual(['forestation']);
   });
 });
