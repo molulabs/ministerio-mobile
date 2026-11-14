@@ -5,6 +5,12 @@ import {
   toCropsPayload,
 } from './steps/crops/crops.helper';
 import {
+  EMPTY_FAMILY_FINANCES,
+  type FamilyFinancesValues,
+  fromFamilyFinancesPayload,
+  toFamilyFinancesPayload,
+} from './steps/familyFinances/familyFinances.helper';
+import {
   EMPTY_FARM_INPUTS,
   type FarmInputsValues,
   fromFarmInputsPayload,
@@ -69,29 +75,14 @@ export type CensusPayload = {
   newFarm: boolean;
 } & Record<CensusSection, Section>;
 
-/** The steps the app has, each with its values as typed. */
-const BUILT_SECTIONS = [
-  'producer',
-  'productionUnit',
-  'livestock',
-  'crops',
-  'farmInputs',
-  'infrastructure',
-] as const;
-
-/** The sections no step of the app edits yet: kept as they came. */
-type RawSection = Exclude<CensusSection, (typeof BUILT_SECTIONS)[number]>;
-
-/**
- * What the wizard edits. A built step keeps its values as typed and turns them into its section
- * (its helper's toXPayload); a step not built yet keeps its section as it came.
- */
+/** What the wizard edits: each step keeps its values as typed, and its helper turns them into its section. */
 export type CensusFormValues = {
   date: string;
   formNumber: string;
   observations: string;
   newFarm: boolean;
   producer: ProducerValues;
+  familyFinances: FamilyFinancesValues;
   /** RENSPA and "vive en la finca": asked with the producer, sent in productionUnit. */
   farm: FarmValues;
   productionUnit: ProductionUnitValues;
@@ -99,16 +90,7 @@ export type CensusFormValues = {
   crops: CropsValues;
   farmInputs: FarmInputsValues;
   infrastructure: InfrastructureValues;
-  sections: Record<RawSection, Section>;
 };
-
-const RAW_SECTIONS = CENSUS_SECTIONS.filter(
-  (section): section is RawSection =>
-    !(BUILT_SECTIONS as readonly CensusSection[]).includes(section),
-);
-
-const emptySections = (): Record<RawSection, Section> =>
-  Object.fromEntries(RAW_SECTIONS.map((section) => [section, {}])) as Record<RawSection, Section>;
 
 /** YYYY-MM-DD of the phone's own day, not UTC: a census taken at 22:00 in Jujuy is of that day. */
 export function localIsoDate(now: Date): string {
@@ -124,13 +106,13 @@ export function emptyCensusValues(now: Date): CensusFormValues {
     observations: '',
     newFarm: false,
     producer: EMPTY_PRODUCER,
+    familyFinances: EMPTY_FAMILY_FINANCES,
     farm: EMPTY_FARM,
     productionUnit: EMPTY_PRODUCTION_UNIT,
     livestock: EMPTY_LIVESTOCK,
     crops: EMPTY_CROPS,
     farmInputs: EMPTY_FARM_INPUTS,
     infrastructure: EMPTY_INFRASTRUCTURE,
-    sections: emptySections(),
   };
 }
 
@@ -143,8 +125,8 @@ export function toCensusPayload(values: CensusFormValues): CensusPayload {
     formNumber: textOrNull(values.formNumber),
     observations: textOrNull(values.observations),
     newFarm: values.newFarm,
-    ...values.sections,
     producer: toProducerPayload(values.producer),
+    familyFinances: toFamilyFinancesPayload(values.familyFinances),
     productionUnit: {
       ...toProductionUnitPayload(values.productionUnit),
       ...toFarmPayload(values.farm),
@@ -170,24 +152,19 @@ const stringOr = (value: unknown, fallback: string) =>
 /** A saved draft back into the form. Whatever the draft lacks starts empty. */
 export function fromCensusPayload(payload: Record<string, unknown>): CensusFormValues {
   const productionUnit = sectionOf(payload, 'productionUnit');
-  const sections = emptySections();
-  for (const section of RAW_SECTIONS) {
-    const value = payload[section];
-    if (isSection(value)) sections[section] = value;
-  }
   return {
     date: stringOr(payload.date, ''),
     formNumber: stringOr(payload.formNumber, ''),
     observations: stringOr(payload.observations, ''),
     newFarm: payload.newFarm === true,
     producer: fromProducerPayload(sectionOf(payload, 'producer')),
+    familyFinances: fromFamilyFinancesPayload(sectionOf(payload, 'familyFinances')),
     farm: fromFarmPayload(productionUnit),
     productionUnit: fromProductionUnitPayload(productionUnit),
     livestock: fromLivestockPayload(sectionOf(payload, 'livestock')),
     crops: fromCropsPayload(sectionOf(payload, 'crops')),
     farmInputs: fromFarmInputsPayload(sectionOf(payload, 'farmInputs')),
     infrastructure: fromInfrastructurePayload(sectionOf(payload, 'infrastructure')),
-    sections,
   };
 }
 

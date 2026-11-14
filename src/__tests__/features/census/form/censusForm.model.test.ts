@@ -9,6 +9,7 @@ import {
   EMPTY_FARM,
   EMPTY_PRODUCER,
 } from '@/src/features/census/form/steps/producer/producer.helper';
+import { EMPTY_FAMILY_FINANCES } from '@/src/features/census/form/steps/familyFinances/familyFinances.helper';
 import { EMPTY_CROPS, withPlot } from '@/src/features/census/form/steps/crops/crops.helper';
 import {
   EMPTY_FARM_INPUTS,
@@ -52,7 +53,7 @@ describe('censusForm.model', () => {
         documentNumber: '30111222',
         phone: null,
       }),
-      familyFinances: {},
+      familyFinances: expect.objectContaining({ hasSpouse: false, adultChildren: null }),
       // The farm is asked with the producer, and travels in the production unit.
       productionUnit: expect.objectContaining({
         renspa: '01.234',
@@ -98,7 +99,7 @@ describe('censusForm.model', () => {
         tractors: '2',
         commercializationChannels: ['ferias'],
       },
-      sections: { familyFinances: { totalMembers: 4 } },
+      familyFinances: { ...EMPTY_FAMILY_FINANCES, hasSpouse: true, minorChildren: '2' },
     };
 
     expect(fromCensusPayload(toCensusPayload(values))).toEqual(values);
@@ -117,7 +118,7 @@ describe('censusForm.model', () => {
       crops: EMPTY_CROPS,
       farmInputs: EMPTY_FARM_INPUTS,
       infrastructure: EMPTY_INFRASTRUCTURE,
-      sections: emptyCensusValues(new Date()).sections,
+      familyFinances: EMPTY_FAMILY_FINANCES,
     });
   });
 

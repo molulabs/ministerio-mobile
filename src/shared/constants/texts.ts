@@ -84,7 +84,6 @@ export const texts = {
       date: 'Fecha',
       formNumber: 'N° de formulario',
       observations: 'Observaciones',
-      notYet: 'Este paso todavía no está en la app. Seguí con el siguiente.',
       finish: 'Terminar censo',
       missingTitle: 'Falta completar',
       missing: {
