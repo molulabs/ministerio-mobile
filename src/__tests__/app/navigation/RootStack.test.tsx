@@ -57,6 +57,11 @@ jest.mock('@/src/infrastructure/network/network.monitor', () => ({
 
 // The map is native (MapLibre) and reads its packages from the database: none installed here.
 jest.mock('@maplibre/maplibre-react-native', () => ({}));
+jest.mock('@/src/features/census/catalogs.queries', () => ({
+  searchProducers: async () => [],
+  useIsRegisteredProducer: () => false,
+  useLocalities: () => [],
+}));
 jest.mock('@/src/features/maps/useOfflineMap', () => ({
   useOfflineMap: () => ({ map: null, error: false }),
 }));

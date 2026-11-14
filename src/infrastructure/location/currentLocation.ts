@@ -27,3 +27,8 @@ export function currentLocation(
     LocationManager.addListener(listener);
   });
 }
+
+/** Asks for the location permission if it was not given yet; false when the user refuses it. */
+export function requestLocationPermission(): Promise<boolean> {
+  return LocationManager.requestPermissions();
+}

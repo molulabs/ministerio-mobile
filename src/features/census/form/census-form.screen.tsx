@@ -29,6 +29,7 @@ import {
   toCensusPayload,
 } from './censusForm.model';
 import { CENSUS_STEPS, clampStep, LAST_STEP } from './censusForm.steps';
+import { ProducerStep } from './steps/producer/ProducerStep';
 
 /** How long the form waits after the last change before saving the draft. */
 const SAVE_DELAY_MS = 500;
@@ -198,7 +199,12 @@ function CensusWizard({ id, userId, initial, onClose }: Props & { initial: Loade
                 value={values.formNumber}
                 onChangeText={(formNumber) => change({ formNumber })}
               />
-              <Text variant="muted">{form.notYet}</Text>
+              <ProducerStep
+                producer={values.producer}
+                farm={values.farm}
+                newFarm={values.newFarm}
+                onChange={change}
+              />
             </>
           )}
           {current.key !== 'producer' && step < LAST_STEP && (

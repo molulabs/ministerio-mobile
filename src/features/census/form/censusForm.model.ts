@@ -1,3 +1,14 @@
+import {
+  EMPTY_FARM,
+  EMPTY_PRODUCER,
+  type FarmValues,
+  fromFarmPayload,
+  fromProducerPayload,
+  type ProducerValues,
+  toFarmPayload,
+  toProducerPayload,
+} from './steps/producer/producer.helper';
+
 /** The payload version the API reads (CensusSubmissionService::SCHEMA_VERSION). */
 export const SCHEMA_VERSION = 2;
 
@@ -27,20 +38,30 @@ export type CensusPayload = {
   newFarm: boolean;
 } & Record<CensusSection, Section>;
 
-/** What the wizard edits. Each step owns its section; a step not built yet keeps it as it came. */
+/** The sections no step of the app edits yet: kept as they came. */
+type RawSection = Exclude<CensusSection, 'producer'>;
+
+/**
+ * What the wizard edits. A built step keeps its values as typed and turns them into its section
+ * (its helper's toXPayload); a step not built yet keeps its section as it came.
+ */
 export type CensusFormValues = {
   date: string;
   formNumber: string;
   observations: string;
   newFarm: boolean;
-  sections: Record<CensusSection, Section>;
+  producer: ProducerValues;
+  /** RENSPA and "vive en la finca": asked with the producer, sent in productionUnit. */
+  farm: FarmValues;
+  sections: Record<RawSection, Section>;
 };
 
-const emptySections = (): Record<CensusSection, Section> =>
-  Object.fromEntries(CENSUS_SECTIONS.map((section) => [section, {}])) as Record<
-    CensusSection,
-    Section
-  >;
+const RAW_SECTIONS = CENSUS_SECTIONS.filter(
+  (section): section is RawSection => section !== 'producer',
+);
+
+const emptySections = (): Record<RawSection, Section> =>
+  Object.fromEntries(RAW_SECTIONS.map((section) => [section, {}])) as Record<RawSection, Section>;
 
 /** YYYY-MM-DD of the phone's own day, not UTC: a census taken at 22:00 in Jujuy is of that day. */
 export function localIsoDate(now: Date): string {
@@ -55,6 +76,8 @@ export function emptyCensusValues(now: Date): CensusFormValues {
     formNumber: '',
     observations: '',
     newFarm: false,
+    producer: EMPTY_PRODUCER,
+    farm: EMPTY_FARM,
     sections: emptySections(),
   };
 }
@@ -69,6 +92,8 @@ export function toCensusPayload(values: CensusFormValues): CensusPayload {
     observations: textOrNull(values.observations),
     newFarm: values.newFarm,
     ...values.sections,
+    producer: toProducerPayload(values.producer),
+    productionUnit: { ...values.sections.productionUnit, ...toFarmPayload(values.farm) },
   };
 }
 
@@ -81,15 +106,23 @@ const stringOr = (value: unknown, fallback: string) =>
 /** A saved draft back into the form. Whatever the draft lacks starts empty. */
 export function fromCensusPayload(payload: Record<string, unknown>): CensusFormValues {
   const sections = emptySections();
-  for (const section of CENSUS_SECTIONS) {
+  for (const section of RAW_SECTIONS) {
     const value = payload[section];
     if (isSection(value)) sections[section] = value;
   }
+  const {
+    renspa: _renspa,
+    producerLivesOnFarm: _livesOnFarm,
+    ...productionUnit
+  } = sections.productionUnit;
+  sections.productionUnit = productionUnit;
   return {
     date: stringOr(payload.date, ''),
     formNumber: stringOr(payload.formNumber, ''),
     observations: stringOr(payload.observations, ''),
     newFarm: payload.newFarm === true,
+    producer: fromProducerPayload(isSection(payload.producer) ? payload.producer : {}),
+    farm: fromFarmPayload(isSection(payload.productionUnit) ? payload.productionUnit : {}),
     sections,
   };
 }
@@ -101,10 +134,8 @@ export function fromCensusPayload(payload: Record<string, unknown>): CensusFormV
 export function missingToFinish(values: CensusFormValues): ('date' | 'producer')[] {
   const missing: ('date' | 'producer')[] = [];
   if (values.date === '') missing.push('date');
-  const producer = values.sections.producer;
-  const filled = (field: string) =>
-    typeof producer[field] === 'string' && (producer[field] as string).trim() !== '';
-  if (!filled('fullName') || !filled('documentType') || !filled('documentNumber')) {
+  const { fullName, documentType, documentNumber } = values.producer;
+  if ([fullName, documentType, documentNumber].some((field) => field.trim() === '')) {
     missing.push('producer');
   }
   return missing;

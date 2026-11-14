@@ -15,6 +15,17 @@ jest.mock('@/src/features/census/census.repository', () => ({
   discardDraft: (...args: unknown[]) => mockDiscardDraft(...args),
 }));
 
+// The producer step reads the phone's catalogs and the GPS, which tests do not open.
+jest.mock('@/src/features/census/catalogs.queries', () => ({
+  searchProducers: async () => [],
+  useIsRegisteredProducer: () => false,
+  useLocalities: () => [],
+}));
+jest.mock('@/src/infrastructure/location/currentLocation', () => ({
+  currentLocation: jest.fn(),
+  requestLocationPermission: jest.fn(),
+}));
+
 const ID = '01a1d70a-496a-7a5e-bf6a-29b1b22455f3';
 const producer = { fullName: 'Rosa Quispe', documentType: 'DNI', documentNumber: '30111222' };
 
@@ -110,7 +121,10 @@ describe('CensusFormScreen', () => {
     expect(mockFinishDraft).toHaveBeenCalledWith(
       ID,
       7,
-      expect.objectContaining({ producer, observations: 'Sin novedades' }),
+      expect.objectContaining({
+        producer: expect.objectContaining(producer),
+        observations: 'Sin novedades',
+      }),
     );
     expect(screen.getByText('Censo listo para enviar')).toBeOnTheScreen();
   });

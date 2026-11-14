@@ -5,8 +5,17 @@ import {
   missingToFinish,
   toCensusPayload,
 } from '@/src/features/census/form/censusForm.model';
+import {
+  EMPTY_FARM,
+  EMPTY_PRODUCER,
+} from '@/src/features/census/form/steps/producer/producer.helper';
 
-const producer = { fullName: 'Rosa Quispe', documentType: 'DNI', documentNumber: '30111222' };
+const producer = {
+  ...EMPTY_PRODUCER,
+  fullName: 'Rosa Quispe',
+  documentType: 'DNI',
+  documentNumber: '30111222',
+};
 
 describe('censusForm.model', () => {
   it('starts a census today, in the phone own day', () => {
@@ -19,7 +28,8 @@ describe('censusForm.model', () => {
     const values = {
       ...emptyCensusValues(new Date(2026, 10, 13)),
       formNumber: '  F-12 ',
-      sections: { ...emptyCensusValues(new Date()).sections, producer },
+      producer,
+      farm: { renspa: ' 01.234 ', producerLivesOnFarm: true },
     };
 
     expect(toCensusPayload(values)).toEqual({
@@ -28,9 +38,15 @@ describe('censusForm.model', () => {
       formNumber: 'F-12',
       observations: null,
       newFarm: false,
-      producer,
+      producer: expect.objectContaining({
+        fullName: 'Rosa Quispe',
+        documentType: 'DNI',
+        documentNumber: '30111222',
+        phone: null,
+      }),
       familyFinances: {},
-      productionUnit: {},
+      // The farm is asked with the producer, and travels in the production unit.
+      productionUnit: { renspa: '01.234', producerLivesOnFarm: true },
       livestock: {},
       crops: {},
       farmInputs: {},
@@ -43,7 +59,13 @@ describe('censusForm.model', () => {
       ...emptyCensusValues(new Date(2026, 10, 13)),
       observations: 'Sin novedades',
       newFarm: true,
-      sections: { ...emptyCensusValues(new Date()).sections, livestock: { hasCattle: true } },
+      producer: { ...producer, locality: { name: 'Nueva' }, latitude: '-23.1', longitude: '-65.4' },
+      farm: { renspa: 'R-1', producerLivesOnFarm: false },
+      sections: {
+        ...emptyCensusValues(new Date()).sections,
+        livestock: { hasCattle: true },
+        productionUnit: { surface: 12 },
+      },
     };
 
     expect(fromCensusPayload(toCensusPayload(values))).toEqual(values);
@@ -55,6 +77,8 @@ describe('censusForm.model', () => {
       formNumber: '',
       observations: '',
       newFarm: false,
+      producer: EMPTY_PRODUCER,
+      farm: EMPTY_FARM,
       sections: emptyCensusValues(new Date()).sections,
     });
   });
@@ -63,20 +87,13 @@ describe('censusForm.model', () => {
     const values = { ...emptyCensusValues(new Date()), date: '' };
     expect(missingToFinish(values)).toEqual(['date', 'producer']);
 
-    const withProducer = {
-      ...emptyCensusValues(new Date()),
-      sections: { ...emptyCensusValues(new Date()).sections, producer },
-    };
-    expect(missingToFinish(withProducer)).toEqual([]);
+    expect(missingToFinish({ ...emptyCensusValues(new Date()), producer })).toEqual([]);
   });
 
   it('takes a blank name or document as missing', () => {
     const values = {
       ...emptyCensusValues(new Date()),
-      sections: {
-        ...emptyCensusValues(new Date()).sections,
-        producer: { ...producer, documentNumber: '  ' },
-      },
+      producer: { ...producer, documentNumber: '  ' },
     };
     expect(missingToFinish(values)).toEqual(['producer']);
   });
