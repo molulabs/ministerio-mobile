@@ -1,26 +1,22 @@
-import { Autocomplete, Button, DateInput, Field, SectionHeader } from '@molulabs/ds';
+import { Autocomplete, DateInput, Field, SectionHeader } from '@molulabs/ds';
 import { useEffect, useId, useState } from 'react';
 
-import {
-  currentLocation,
-  requestLocationPermission,
-} from '@/src/infrastructure/location/currentLocation';
 import { COUNTRIES } from '@/src/shared/constants/nationality';
 import { AutocompleteField } from '@/src/shared/ui/AutocompleteField';
 import { SelectField } from '@/src/shared/ui/SelectField';
 import { Text } from '@/src/shared/ui/Text';
 import { TextField } from '@/src/shared/ui/TextField';
-import { formatDegrees } from '@/src/shared/utilities/coordinates';
 
 import {
   type IndexedProducer,
   searchProducers,
   useIsRegisteredProducer,
-  useLocalities,
 } from '../../../catalogs.queries';
+import { CoordinatesFields } from '../../fields/CoordinatesFields';
+import { DEPARTMENT_OPTIONS, FIELD_TEXTS } from '../../fields/fields.constants';
+import { LocalityField } from '../../fields/LocalityField';
 import { FarmFields } from './FarmFields';
 import {
-  DEPARTMENT_OPTIONS,
   DOCUMENT_TYPE_OPTIONS,
   MAX_LENGTH,
   MIN_SEARCH_CHARS,
@@ -29,7 +25,6 @@ import {
 import {
   type FarmValues,
   hasProducer,
-  type LocalityRef,
   newProducer,
   onlyDigits,
   type ProducerValues,
@@ -151,12 +146,12 @@ export function ProducerStep({ producer, farm, newFarm, onChange }: Props) {
             maxLength={MAX_LENGTH.number}
           />
           <SelectField
-            label={T.department}
+            label={FIELD_TEXTS.department}
             value={producer.department}
             // The locality belongs to the department, so a new one starts it over.
             onChange={(department) => set({ department, locality: null })}
             options={DEPARTMENT_OPTIONS}
-            placeholder={T.departmentPlaceholder}
+            placeholder={FIELD_TEXTS.departmentPlaceholder}
           />
           <LocalityField
             department={producer.department}
@@ -193,7 +188,7 @@ export function ProducerStep({ producer, farm, newFarm, onChange }: Props) {
             onChangeText={(brandAndSignals) => set({ brandAndSignals })}
             maxLength={MAX_LENGTH.brandAndSignals}
           />
-          <Coordinates
+          <CoordinatesFields
             latitude={producer.latitude}
             longitude={producer.longitude}
             onChange={(latitude, longitude) => set({ latitude, longitude })}
@@ -268,108 +263,6 @@ function ProducerSearch({
           emptyLabel={T.searchEmpty}
         />
       </Field>
-    </>
-  );
-}
-
-/** The locality, among the department's on the phone, or a new one by its name. */
-function LocalityField({
-  department,
-  value,
-  onChange,
-}: {
-  department: string;
-  value: LocalityRef;
-  onChange: (locality: LocalityRef) => void;
-}) {
-  const localities = useLocalities(department);
-  const label =
-    value === null
-      ? ''
-      : typeof value === 'number'
-        ? (localities.find((locality) => locality.id === value)?.name ?? '')
-        : value.name;
-
-  return (
-    <AutocompleteField
-      label={T.locality}
-      valueLabel={label}
-      options={localities.map((locality) => ({ label: locality.name, value: locality.id }))}
-      onPick={(option) => onChange(option.value)}
-      onCreate={(name) => onChange({ name })}
-      createLabel={T.createLocality}
-      placeholder={T.localityPlaceholder}
-      emptyLabel={T.localityEmpty}
-      disabled={department === ''}
-      hint={
-        department === ''
-          ? T.localityNeedsDepartment
-          : value !== null && typeof value === 'object'
-            ? T.newLocality
-            : undefined
-      }
-    />
-  );
-}
-
-type Locating = 'idle' | 'locating' | 'denied' | 'none';
-
-/** Latitude and longitude, typed or taken from the GPS (it needs no signal). */
-function Coordinates({
-  latitude,
-  longitude,
-  onChange,
-}: {
-  latitude: string;
-  longitude: string;
-  onChange: (latitude: string, longitude: string) => void;
-}) {
-  const [locating, setLocating] = useState<Locating>('idle');
-
-  const locate = async () => {
-    if (!(await requestLocationPermission())) {
-      setLocating('denied');
-      return;
-    }
-    setLocating('locating');
-    const position = await currentLocation();
-    if (!position) {
-      setLocating('none');
-      return;
-    }
-    setLocating('idle');
-    onChange(formatDegrees(position.coords.latitude), formatDegrees(position.coords.longitude));
-  };
-
-  const notice =
-    locating === 'denied' ? T.locationDenied : locating === 'none' ? T.noLocation : null;
-
-  return (
-    <>
-      <TextField
-        label={T.latitude}
-        value={latitude}
-        onChangeText={(next) => onChange(next, longitude)}
-        keyboardType="numbers-and-punctuation"
-        mono
-      />
-      <TextField
-        label={T.longitude}
-        value={longitude}
-        onChangeText={(next) => onChange(latitude, next)}
-        keyboardType="numbers-and-punctuation"
-        mono
-      />
-      <Button
-        tone="secondary"
-        icon="ti-current-location"
-        disabled={locating === 'locating'}
-        onClick={() => void locate()}
-        aria-label={locating === 'locating' ? T.locating : T.useLocation}
-      >
-        {locating === 'locating' ? T.locating : T.useLocation}
-      </Button>
-      {notice && <Text variant="muted">{notice}</Text>}
     </>
   );
 }

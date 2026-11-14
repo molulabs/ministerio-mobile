@@ -1,10 +1,14 @@
 import { DEFAULT_NATIONALITY } from '@/src/shared/constants/nationality';
 
 import type { IndexedProducer } from '../../../catalogs.queries';
+import {
+  asText as text,
+  type LocalityRef,
+  textOrNull,
+  toLocalityRef,
+  toNumber as toCoordinate,
+} from '../../fields/fields.helper';
 import { CUIL_DIGITS } from './producer.constants';
-
-/** A locality of the catalog by its id, or one the catalog lacks by its name (the API adds it). */
-export type LocalityRef = number | { name: string } | null;
 
 /** What the producer step edits of the producer, as typed. */
 export type ProducerValues = {
@@ -93,14 +97,6 @@ export function registeredProducer(producer: IndexedProducer): ProducerValues {
   };
 }
 
-const textOrNull = (value: string) => (value.trim() === '' ? null : value.trim());
-
-/** A lone "-" or "." is no figure yet: it goes as no coordinate (the web's toCoordinate). */
-function toCoordinate(value: string): number | null {
-  const coordinate = Number(value.replace(',', '.'));
-  return value.trim() !== '' && Number.isFinite(coordinate) ? coordinate : null;
-}
-
 /** A passport keeps its letters; any other document is its digits, as the index has them. */
 const documentOf = (values: ProducerValues) =>
   values.documentType === 'PASAPORTE'
@@ -130,18 +126,6 @@ export function toProducerPayload(values: ProducerValues): Record<string, unknow
     latitude: toCoordinate(values.latitude),
     longitude: toCoordinate(values.longitude),
   };
-}
-
-const text = (value: unknown) =>
-  typeof value === 'string' ? value : typeof value === 'number' ? String(value) : '';
-
-function toLocalityRef(value: unknown): LocalityRef {
-  if (typeof value === 'number' && Number.isInteger(value)) return value;
-  if (typeof value === 'object' && value !== null && 'name' in value) {
-    const name = (value as { name: unknown }).name;
-    if (typeof name === 'string' && name.trim() !== '') return { name };
-  }
-  return null;
 }
 
 /** A saved producer section back into the step. */

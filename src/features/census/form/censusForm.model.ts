@@ -8,6 +8,12 @@ import {
   toFarmPayload,
   toProducerPayload,
 } from './steps/producer/producer.helper';
+import {
+  EMPTY_PRODUCTION_UNIT,
+  fromProductionUnitPayload,
+  type ProductionUnitValues,
+  toProductionUnitPayload,
+} from './steps/productionUnit/productionUnit.helper';
 
 /** The payload version the API reads (CensusSubmissionService::SCHEMA_VERSION). */
 export const SCHEMA_VERSION = 2;
@@ -39,7 +45,7 @@ export type CensusPayload = {
 } & Record<CensusSection, Section>;
 
 /** The sections no step of the app edits yet: kept as they came. */
-type RawSection = Exclude<CensusSection, 'producer'>;
+type RawSection = Exclude<CensusSection, 'producer' | 'productionUnit'>;
 
 /**
  * What the wizard edits. A built step keeps its values as typed and turns them into its section
@@ -53,11 +59,12 @@ export type CensusFormValues = {
   producer: ProducerValues;
   /** RENSPA and "vive en la finca": asked with the producer, sent in productionUnit. */
   farm: FarmValues;
+  productionUnit: ProductionUnitValues;
   sections: Record<RawSection, Section>;
 };
 
 const RAW_SECTIONS = CENSUS_SECTIONS.filter(
-  (section): section is RawSection => section !== 'producer',
+  (section): section is RawSection => section !== 'producer' && section !== 'productionUnit',
 );
 
 const emptySections = (): Record<RawSection, Section> =>
@@ -78,6 +85,7 @@ export function emptyCensusValues(now: Date): CensusFormValues {
     newFarm: false,
     producer: EMPTY_PRODUCER,
     farm: EMPTY_FARM,
+    productionUnit: EMPTY_PRODUCTION_UNIT,
     sections: emptySections(),
   };
 }
@@ -93,7 +101,10 @@ export function toCensusPayload(values: CensusFormValues): CensusPayload {
     newFarm: values.newFarm,
     ...values.sections,
     producer: toProducerPayload(values.producer),
-    productionUnit: { ...values.sections.productionUnit, ...toFarmPayload(values.farm) },
+    productionUnit: {
+      ...toProductionUnitPayload(values.productionUnit),
+      ...toFarmPayload(values.farm),
+    },
   };
 }
 
@@ -105,24 +116,20 @@ const stringOr = (value: unknown, fallback: string) =>
 
 /** A saved draft back into the form. Whatever the draft lacks starts empty. */
 export function fromCensusPayload(payload: Record<string, unknown>): CensusFormValues {
+  const productionUnit = isSection(payload.productionUnit) ? payload.productionUnit : {};
   const sections = emptySections();
   for (const section of RAW_SECTIONS) {
     const value = payload[section];
     if (isSection(value)) sections[section] = value;
   }
-  const {
-    renspa: _renspa,
-    producerLivesOnFarm: _livesOnFarm,
-    ...productionUnit
-  } = sections.productionUnit;
-  sections.productionUnit = productionUnit;
   return {
     date: stringOr(payload.date, ''),
     formNumber: stringOr(payload.formNumber, ''),
     observations: stringOr(payload.observations, ''),
     newFarm: payload.newFarm === true,
     producer: fromProducerPayload(isSection(payload.producer) ? payload.producer : {}),
-    farm: fromFarmPayload(isSection(payload.productionUnit) ? payload.productionUnit : {}),
+    farm: fromFarmPayload(productionUnit),
+    productionUnit: fromProductionUnitPayload(productionUnit),
     sections,
   };
 }

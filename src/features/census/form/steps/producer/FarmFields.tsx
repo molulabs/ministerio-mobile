@@ -1,6 +1,7 @@
-import { Checkbox, Field, SectionHeader, SegmentedControl } from '@molulabs/ds';
+import { Checkbox, SectionHeader } from '@molulabs/ds';
 
 import { TextField } from '@/src/shared/ui/TextField';
+import { YesNoField } from '@/src/shared/ui/YesNoField';
 
 import { MAX_LENGTH, PRODUCER_TEXTS as T } from './producer.constants';
 import type { FarmValues } from './producer.helper';
@@ -40,16 +41,11 @@ export function FarmFields({ farm, newFarm, canBeAnotherFarm, onChange }: Props)
         autoCapitalize="characters"
         mono
       />
-      <Field label={T.livesOnFarm}>
-        <SegmentedControl
-          value={farm.producerLivesOnFarm}
-          onChange={(producerLivesOnFarm: boolean) => set({ producerLivesOnFarm })}
-          options={[
-            { value: true, label: T.yes },
-            { value: false, label: T.no },
-          ]}
-        />
-      </Field>
+      <YesNoField
+        label={T.livesOnFarm}
+        value={farm.producerLivesOnFarm}
+        onChange={(producerLivesOnFarm) => set({ producerLivesOnFarm })}
+      />
     </>
   );
 }

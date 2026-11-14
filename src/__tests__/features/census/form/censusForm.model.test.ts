@@ -9,6 +9,7 @@ import {
   EMPTY_FARM,
   EMPTY_PRODUCER,
 } from '@/src/features/census/form/steps/producer/producer.helper';
+import { EMPTY_PRODUCTION_UNIT } from '@/src/features/census/form/steps/productionUnit/productionUnit.helper';
 
 const producer = {
   ...EMPTY_PRODUCER,
@@ -46,7 +47,12 @@ describe('censusForm.model', () => {
       }),
       familyFinances: {},
       // The farm is asked with the producer, and travels in the production unit.
-      productionUnit: { renspa: '01.234', producerLivesOnFarm: true },
+      productionUnit: expect.objectContaining({
+        renspa: '01.234',
+        producerLivesOnFarm: true,
+        totalHectares: null,
+        drinkingWater: false,
+      }),
       livestock: {},
       crops: {},
       farmInputs: {},
@@ -61,11 +67,15 @@ describe('censusForm.model', () => {
       newFarm: true,
       producer: { ...producer, locality: { name: 'Nueva' }, latitude: '-23.1', longitude: '-65.4' },
       farm: { renspa: 'R-1', producerLivesOnFarm: false },
-      sections: {
-        ...emptyCensusValues(new Date()).sections,
-        livestock: { hasCattle: true },
-        productionUnit: { surface: 12 },
+      productionUnit: {
+        ...EMPTY_PRODUCTION_UNIT,
+        totalHectares: '12.5',
+        landTenure: ['propietario', 'otros'],
+        landTenureOtherDetail: 'Comodato',
+        locality: 4,
+        gas: true,
       },
+      sections: { ...emptyCensusValues(new Date()).sections, livestock: { hasCattle: true } },
     };
 
     expect(fromCensusPayload(toCensusPayload(values))).toEqual(values);
@@ -79,6 +89,7 @@ describe('censusForm.model', () => {
       newFarm: false,
       producer: EMPTY_PRODUCER,
       farm: EMPTY_FARM,
+      productionUnit: EMPTY_PRODUCTION_UNIT,
       sections: emptyCensusValues(new Date()).sections,
     });
   });
