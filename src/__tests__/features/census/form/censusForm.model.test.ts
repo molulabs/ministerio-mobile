@@ -9,6 +9,7 @@ import {
   EMPTY_FARM,
   EMPTY_PRODUCER,
 } from '@/src/features/census/form/steps/producer/producer.helper';
+import { EMPTY_LIVESTOCK } from '@/src/features/census/form/steps/livestock/livestock.helper';
 import { EMPTY_PRODUCTION_UNIT } from '@/src/features/census/form/steps/productionUnit/productionUnit.helper';
 
 const producer = {
@@ -53,7 +54,7 @@ describe('censusForm.model', () => {
         totalHectares: null,
         drinkingWater: false,
       }),
-      livestock: {},
+      livestock: expect.objectContaining({ hasLivestockActivity: false, cattleBreedIds: [] }),
       crops: {},
       farmInputs: {},
       infrastructure: {},
@@ -75,7 +76,13 @@ describe('censusForm.model', () => {
         locality: 4,
         gas: true,
       },
-      sections: { ...emptyCensusValues(new Date()).sections, livestock: { hasCattle: true } },
+      livestock: {
+        ...EMPTY_LIVESTOCK,
+        hasLivestockActivity: true,
+        hasCattle: true,
+        cattleCowsOwn: '4',
+      },
+      sections: { ...emptyCensusValues(new Date()).sections, crops: { hasCropActivity: true } },
     };
 
     expect(fromCensusPayload(toCensusPayload(values))).toEqual(values);
@@ -90,6 +97,7 @@ describe('censusForm.model', () => {
       producer: EMPTY_PRODUCER,
       farm: EMPTY_FARM,
       productionUnit: EMPTY_PRODUCTION_UNIT,
+      livestock: EMPTY_LIVESTOCK,
       sections: emptyCensusValues(new Date()).sections,
     });
   });

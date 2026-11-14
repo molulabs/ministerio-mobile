@@ -16,8 +16,10 @@ const NativeInput = TextInput as unknown as ComponentType<
   }
 >;
 
-type Props = Omit<NativeTextInputProps, 'style' | 'editable' | 'accessibilityLabel'> & {
+type Props = Omit<NativeTextInputProps, 'style' | 'editable'> & {
   label: string;
+  /** What a screen reader says, when the label alone is not enough (default: the label). */
+  accessibilityLabel?: string;
   /** Shown under the input, which turns red. */
   error?: string;
   hint?: string;
@@ -30,10 +32,23 @@ type Props = Omit<NativeTextInputProps, 'style' | 'editable' | 'accessibilityLab
 };
 
 /** A labelled text input of the design system, with React Native's input props. */
-export function TextField({ label, error, hint, required, disabled, ...input }: Props) {
+export function TextField({
+  label,
+  accessibilityLabel,
+  error,
+  hint,
+  required,
+  disabled,
+  ...input
+}: Props) {
   return (
     <Field label={label} error={error} hint={hint} required={required}>
-      <NativeInput {...input} accessibilityLabel={label} invalid={!!error} disabled={disabled} />
+      <NativeInput
+        {...input}
+        accessibilityLabel={accessibilityLabel ?? label}
+        invalid={!!error}
+        disabled={disabled}
+      />
     </Field>
   );
 }

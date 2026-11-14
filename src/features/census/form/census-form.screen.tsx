@@ -29,11 +29,12 @@ import {
   toCensusPayload,
 } from './censusForm.model';
 import { CENSUS_STEPS, clampStep, LAST_STEP } from './censusForm.steps';
+import { LivestockStep } from './steps/livestock/LivestockStep';
 import { ProducerStep } from './steps/producer/ProducerStep';
 import { ProductionUnitStep } from './steps/productionUnit/ProductionUnitStep';
 
 /** The steps the app has; the rest say so and keep what the census has of them. */
-const BUILT_STEPS = new Set<string>(['producer', 'productionUnit', 'summary']);
+const BUILT_STEPS = new Set<string>(['producer', 'productionUnit', 'livestock', 'summary']);
 
 /** How long the form waits after the last change before saving the draft. */
 const SAVE_DELAY_MS = 500;
@@ -216,6 +217,12 @@ function CensusWizard({ id, userId, initial, onClose }: Props & { initial: Loade
               values={values.productionUnit}
               producerLivesOnFarm={values.farm.producerLivesOnFarm}
               onChange={(productionUnit) => change({ productionUnit })}
+            />
+          )}
+          {current.key === 'livestock' && (
+            <LivestockStep
+              values={values.livestock}
+              onChange={(livestock) => change({ livestock })}
             />
           )}
           {!BUILT_STEPS.has(current.key) && <Text variant="muted">{form.notYet}</Text>}

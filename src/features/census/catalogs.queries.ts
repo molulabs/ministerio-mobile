@@ -2,13 +2,14 @@ import { asc, eq, or, type SQL, sql, type SQLWrapper } from 'drizzle-orm';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 
 import { getDatabase } from '@/src/infrastructure/db/client';
-import { localities, producerIndex } from '@/src/infrastructure/db/schema';
+import { livestockBreeds, localities, producerIndex } from '@/src/infrastructure/db/schema';
 
 /** How many producers a search shows: enough to pick from, few enough to read. */
 const PRODUCER_RESULTS = 30;
 
 export type IndexedProducer = { documentNumber: string; fullName: string };
 export type Locality = { id: number; name: string };
+export type Breed = { id: number; name: string };
 
 /** The column has the text anywhere, with LIKE's own wildcards (% and _) taken as plain characters. */
 const contains = (column: SQLWrapper, text: string): SQL =>
@@ -58,4 +59,17 @@ export function useLocalities(department: string): Locality[] {
     [department],
   );
   return department === '' ? [] : data;
+}
+
+/** The breeds of a species (the API's LivestockSpecies), by name. */
+export function useBreeds(species: string): Breed[] {
+  const { data } = useLiveQuery(
+    getDatabase()
+      .select({ id: livestockBreeds.id, name: livestockBreeds.name })
+      .from(livestockBreeds)
+      .where(eq(livestockBreeds.species, species))
+      .orderBy(asc(livestockBreeds.name)),
+    [species],
+  );
+  return data;
 }

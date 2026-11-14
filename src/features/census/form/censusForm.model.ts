@@ -9,6 +9,12 @@ import {
   toProducerPayload,
 } from './steps/producer/producer.helper';
 import {
+  EMPTY_LIVESTOCK,
+  fromLivestockPayload,
+  type LivestockValues,
+  toLivestockPayload,
+} from './steps/livestock/livestock.helper';
+import {
   EMPTY_PRODUCTION_UNIT,
   fromProductionUnitPayload,
   type ProductionUnitValues,
@@ -45,7 +51,7 @@ export type CensusPayload = {
 } & Record<CensusSection, Section>;
 
 /** The sections no step of the app edits yet: kept as they came. */
-type RawSection = Exclude<CensusSection, 'producer' | 'productionUnit'>;
+type RawSection = Exclude<CensusSection, 'producer' | 'productionUnit' | 'livestock'>;
 
 /**
  * What the wizard edits. A built step keeps its values as typed and turns them into its section
@@ -60,11 +66,13 @@ export type CensusFormValues = {
   /** RENSPA and "vive en la finca": asked with the producer, sent in productionUnit. */
   farm: FarmValues;
   productionUnit: ProductionUnitValues;
+  livestock: LivestockValues;
   sections: Record<RawSection, Section>;
 };
 
 const RAW_SECTIONS = CENSUS_SECTIONS.filter(
-  (section): section is RawSection => section !== 'producer' && section !== 'productionUnit',
+  (section): section is RawSection =>
+    section !== 'producer' && section !== 'productionUnit' && section !== 'livestock',
 );
 
 const emptySections = (): Record<RawSection, Section> =>
@@ -86,6 +94,7 @@ export function emptyCensusValues(now: Date): CensusFormValues {
     producer: EMPTY_PRODUCER,
     farm: EMPTY_FARM,
     productionUnit: EMPTY_PRODUCTION_UNIT,
+    livestock: EMPTY_LIVESTOCK,
     sections: emptySections(),
   };
 }
@@ -105,6 +114,7 @@ export function toCensusPayload(values: CensusFormValues): CensusPayload {
       ...toProductionUnitPayload(values.productionUnit),
       ...toFarmPayload(values.farm),
     },
+    livestock: toLivestockPayload(values.livestock),
   };
 }
 
@@ -130,6 +140,7 @@ export function fromCensusPayload(payload: Record<string, unknown>): CensusFormV
     producer: fromProducerPayload(isSection(payload.producer) ? payload.producer : {}),
     farm: fromFarmPayload(productionUnit),
     productionUnit: fromProductionUnitPayload(productionUnit),
+    livestock: fromLivestockPayload(isSection(payload.livestock) ? payload.livestock : {}),
     sections,
   };
 }

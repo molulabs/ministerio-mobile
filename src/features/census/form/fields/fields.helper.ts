@@ -1,5 +1,8 @@
 /** A locality of the catalog by its id, or one the catalog lacks by its name (the API adds it). */
-export type LocalityRef = number | { name: string } | null;
+export type LocalityRef = CatalogRef | null;
+
+/** A catalog entry (locality, breed, forest species) by its id, or one the catalog lacks by its name. */
+export type CatalogRef = number | { name: string };
 
 export const textOrNull = (value: string) => (value.trim() === '' ? null : value.trim());
 
@@ -13,6 +16,7 @@ export function toNumber(value: string): number | null {
 export const asText = (value: unknown) =>
   typeof value === 'string' ? value : typeof value === 'number' ? String(value) : '';
 
+/** A saved catalog reference, or null when it is none. */
 export function toLocalityRef(value: unknown): LocalityRef {
   if (typeof value === 'number' && Number.isInteger(value)) return value;
   if (typeof value === 'object' && value !== null && 'name' in value) {
@@ -20,4 +24,16 @@ export function toLocalityRef(value: unknown): LocalityRef {
     if (typeof name === 'string' && name.trim() !== '') return { name };
   }
   return null;
+}
+
+/** A saved list of catalog references, without whatever is not one. */
+export const toCatalogRefs = (value: unknown): CatalogRef[] =>
+  Array.isArray(value)
+    ? value.map(toLocalityRef).filter((ref): ref is CatalogRef => ref !== null)
+    : [];
+
+/** A count of animals as typed: its digits, or none. */
+export function toCount(value: string): number | null {
+  const digits = value.replace(/\D/g, '');
+  return digits === '' ? null : Number(digits);
 }
