@@ -22,16 +22,16 @@ describe('producer.helper', () => {
   });
 
   it('starts a new producer with the name searched when it is not a number', () => {
-    expect(newProducer(' Rosa Quispe ')).toMatchObject({
-      fullName: 'Rosa Quispe',
+    expect(newProducer(' Rosa Ficticia ')).toMatchObject({
+      fullName: 'Rosa Ficticia',
       documentNumber: '',
     });
   });
 
   it('starts a registered producer with only what the phone knows, not even the nationality', () => {
-    expect(registeredProducer({ documentNumber: '30111222', fullName: 'Rosa Quispe' })).toEqual({
+    expect(registeredProducer({ documentNumber: '30111222', fullName: 'Rosa Ficticia' })).toEqual({
       ...EMPTY_PRODUCER,
-      fullName: 'Rosa Quispe',
+      fullName: 'Rosa Ficticia',
       documentNumber: '30111222',
       documentType: 'DNI',
     });
@@ -40,14 +40,14 @@ describe('producer.helper', () => {
   it('sends what was left empty as null, so it erases nothing of a registered producer', () => {
     const payload = toProducerPayload({
       ...EMPTY_PRODUCER,
-      fullName: ' Rosa Quispe ',
+      fullName: ' Rosa Ficticia ',
       documentNumber: '30.111.222',
       phone: '  ',
       street: ' Ruta 9 ',
     });
 
     expect(payload).toMatchObject({
-      fullName: 'Rosa Quispe',
+      fullName: 'Rosa Ficticia',
       documentNumber: '30111222',
       phone: null,
       street: 'Ruta 9',

@@ -11,7 +11,7 @@ const row = (change: Partial<CensusRow> = {}): CensusRow => ({
   status: 'ready',
   payload: {
     date: '2026-11-13',
-    producer: { fullName: 'Rosa Quispe', documentType: 'DNI', documentNumber: '30111222' },
+    producer: { fullName: 'Rosa Ficticia', documentType: 'DNI', documentNumber: '30111222' },
   },
   errors: null,
   conflict: null,
@@ -33,7 +33,7 @@ describe('toListItem', () => {
     expect(toListItem(row())).toEqual({
       id: '01a1d70a-496a-7a5e-bf6a-29b1b22455f3',
       status: 'ready',
-      producer: 'Rosa Quispe',
+      producer: 'Rosa Ficticia',
       document: 'DNI 30111222',
       date: '2026-11-13',
       errors: [],

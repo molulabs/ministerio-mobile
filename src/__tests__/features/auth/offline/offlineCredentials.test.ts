@@ -9,7 +9,7 @@ import {
 const rosa: SessionUser = {
   id: 4,
   firstname: 'Rosa',
-  lastname: 'Mendieta',
+  lastname: 'Ensayo',
   email: 'rosa@company.com',
   role: 'ROLE_ENUMERATOR',
 };

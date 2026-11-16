@@ -50,13 +50,13 @@ async function renderStep(initial: Partial<State> = {}) {
   return latest;
 }
 
-const rosa = { ...EMPTY_PRODUCER, fullName: 'Rosa Quispe', documentNumber: '30111222' };
+const rosa = { ...EMPTY_PRODUCER, fullName: 'Rosa Ficticia', documentNumber: '30111222' };
 
 describe('ProducerStep', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockSearchProducers.mockResolvedValue([
-      { documentNumber: '30111222', fullName: 'Rosa Quispe' },
+      { documentNumber: '30111222', fullName: 'Rosa Ficticia' },
     ]);
   });
 
@@ -65,11 +65,11 @@ describe('ProducerStep', () => {
 
     await fireEvent.press(screen.getByLabelText('DNI o CUIL'));
     await fireEvent.changeText(screen.getByRole('search'), '30111');
-    await fireEvent.press(await screen.findByText('Rosa Quispe'));
+    await fireEvent.press(await screen.findByText('Rosa Ficticia'));
 
     expect(mockSearchProducers).toHaveBeenCalledWith('30111');
     expect(latest.current.producer).toMatchObject({
-      fullName: 'Rosa Quispe',
+      fullName: 'Rosa Ficticia',
       documentNumber: '30111222',
     });
     expect(
@@ -104,7 +104,7 @@ describe('ProducerStep', () => {
     await fireEvent.press(screen.getByLabelText('DNI o CUIL'));
     await fireEvent.changeText(screen.getByRole('search'), '30111222');
 
-    expect(await screen.findByText('Rosa Quispe')).toBeOnTheScreen();
+    expect(await screen.findByText('Rosa Ficticia')).toBeOnTheScreen();
     expect(screen.queryByText('Crear productor «30111222»')).toBeNull();
   });
 

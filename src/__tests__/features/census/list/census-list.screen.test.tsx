@@ -7,7 +7,7 @@ import { CensusListScreen } from '@/src/features/census/list/census-list.screen'
 const census = (change: Partial<CensusListItem>): CensusListItem => ({
   id: '01a1d70a-496a-7a5e-bf6a-29b1b22455f3',
   status: 'ready',
-  producer: 'Rosa Quispe',
+  producer: 'Rosa Ficticia',
   document: 'DNI 30111222',
   date: '2026-11-13',
   errors: [],
@@ -49,7 +49,7 @@ describe('CensusListScreen', () => {
 
   it('lists each census with its producer, document, date and state, by group', async () => {
     await renderScreen([
-      census({ id: '3', status: 'sent', producer: 'Hugo Cruz', document: 'DNI 25000111' }),
+      census({ id: '3', status: 'sent', producer: 'Hugo Ejemplo', document: 'DNI 25000111' }),
       census({ id: '2', status: 'ready' }),
       census({ id: '1', status: 'needs_fix', producer: null, document: null, date: null }),
     ]);
@@ -57,10 +57,10 @@ describe('CensusListScreen', () => {
     expect(screen.getByText('Para revisar')).toBeOnTheScreen();
     expect(screen.getByText('Pendientes de envío')).toBeOnTheScreen();
     expect(screen.getByText('Enviados')).toBeOnTheScreen();
-    expect(screen.getByText('Rosa Quispe')).toBeOnTheScreen();
+    expect(screen.getByText('Rosa Ficticia')).toBeOnTheScreen();
     expect(screen.getByText('DNI 30111222 · 13/11/2026')).toBeOnTheScreen();
     expect(screen.getByText('Pendiente')).toBeOnTheScreen();
-    expect(screen.getByText('Hugo Cruz')).toBeOnTheScreen();
+    expect(screen.getByText('Hugo Ejemplo')).toBeOnTheScreen();
     expect(screen.getByText('Enviado')).toBeOnTheScreen();
     expect(screen.getByText('Productor sin nombre')).toBeOnTheScreen();
     expect(screen.getByText('A corregir')).toBeOnTheScreen();
@@ -90,7 +90,7 @@ describe('CensusListScreen', () => {
       }),
     ]);
 
-    await fireEvent.press(screen.getByRole('button', { name: /Rosa Quispe/ }));
+    await fireEvent.press(screen.getByRole('button', { name: /Rosa Ficticia/ }));
 
     expect(screen.getByText('Datos para corregir')).toBeOnTheScreen();
     expect(screen.getByText('Este valor no debería estar vacío.')).toBeOnTheScreen();
@@ -105,7 +105,7 @@ describe('CensusListScreen', () => {
       }),
     ]);
 
-    await fireEvent.press(screen.getByRole('button', { name: /Rosa Quispe/ }));
+    await fireEvent.press(screen.getByRole('button', { name: /Rosa Ficticia/ }));
     await fireEvent.press(screen.getByRole('button', { name: 'Corregir' }));
 
     expect(mockFix).toHaveBeenCalledWith('01a1d70a-496a-7a5e-bf6a-29b1b22455f3');
@@ -114,7 +114,7 @@ describe('CensusListScreen', () => {
   it('offers nothing to fix for a census the API refused', async () => {
     await renderScreen([census({ status: 'anomaly' })]);
 
-    await fireEvent.press(screen.getByRole('button', { name: /Rosa Quispe/ }));
+    await fireEvent.press(screen.getByRole('button', { name: /Rosa Ficticia/ }));
 
     expect(screen.queryByRole('button', { name: 'Corregir' })).toBeNull();
   });
@@ -131,14 +131,14 @@ describe('CensusListScreen', () => {
     expect(screen.getByText('A corregir')).toBeOnTheScreen();
     expect(screen.queryByText('Borrador')).toBeNull();
 
-    await fireEvent.press(screen.getByRole('button', { name: /Rosa Quispe/ }));
+    await fireEvent.press(screen.getByRole('button', { name: /Rosa Ficticia/ }));
     expect(mockOpenDraft).toHaveBeenCalledWith('01a1d70a-496a-7a5e-bf6a-29b1b22455f3');
   });
 
   it('says a census the API refused is not sent again', async () => {
     await renderScreen([census({ status: 'anomaly' })]);
 
-    await fireEvent.press(screen.getByRole('button', { name: /Rosa Quispe/ }));
+    await fireEvent.press(screen.getByRole('button', { name: /Rosa Ficticia/ }));
 
     expect(screen.getByText('No se pudo registrar')).toBeOnTheScreen();
     expect(screen.getByText(/no se vuelve a enviar/)).toBeOnTheScreen();
@@ -149,7 +149,7 @@ describe('CensusListScreen', () => {
       census({ status: 'in_review', conflict: 'El productor ya tiene otra finca con ese RENSPA.' }),
     ]);
 
-    await fireEvent.press(screen.getByRole('button', { name: /Rosa Quispe/ }));
+    await fireEvent.press(screen.getByRole('button', { name: /Rosa Ficticia/ }));
 
     expect(screen.getByText('Enviado, en revisión')).toBeOnTheScreen();
     expect(screen.getByText('El productor ya tiene otra finca con ese RENSPA.')).toBeOnTheScreen();
@@ -158,7 +158,7 @@ describe('CensusListScreen', () => {
   it('does not open a census that has nothing more to show', async () => {
     await renderScreen([census({ status: 'sent' })]);
 
-    expect(screen.queryByRole('button', { name: /Rosa Quispe/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Rosa Ficticia/ })).toBeNull();
   });
   it('starts a census', async () => {
     await renderScreen([]);

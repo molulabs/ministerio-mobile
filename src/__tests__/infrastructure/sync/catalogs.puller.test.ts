@@ -19,7 +19,7 @@ const catalogs: Catalogs = {
   localities: [{ id: 155, department: 'DOCTOR_MANUEL_BELGRANO', name: 'San Salvador de Jujuy' }],
   livestockBreeds: [{ id: 1, species: 'CATTLE', name: 'Criolla' }],
   forestSpecies: [{ id: 7, name: 'Algarrobo' }],
-  producers: [{ documentNumber: '22333444', fullName: 'Maria Gomez' }],
+  producers: [{ documentNumber: '22333444', fullName: 'Maria Simulada' }],
 };
 
 /** A fake API that answers each request with the next reply and records If-None-Match. */

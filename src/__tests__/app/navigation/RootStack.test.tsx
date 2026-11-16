@@ -66,7 +66,7 @@ jest.mock('@/src/features/maps/useOfflineMap', () => ({
   useOfflineMap: () => ({ map: null, error: false }),
 }));
 
-const rosa = { id: 7, firstname: 'Rosa', lastname: 'Mendieta', email: 'rosa@company.com' };
+const rosa = { id: 7, firstname: 'Rosa', lastname: 'Ensayo', email: 'rosa@company.com' };
 
 function renderNavigation() {
   // App.tsx puts the toasts above the navigation.

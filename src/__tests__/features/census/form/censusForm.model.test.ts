@@ -21,7 +21,7 @@ import { EMPTY_PRODUCTION_UNIT } from '@/src/features/census/form/steps/producti
 
 const producer = {
   ...EMPTY_PRODUCER,
-  fullName: 'Rosa Quispe',
+  fullName: 'Rosa Ficticia',
   documentType: 'DNI',
   documentNumber: '30111222',
 };
@@ -48,7 +48,7 @@ describe('censusForm.model', () => {
       observations: null,
       newFarm: false,
       producer: expect.objectContaining({
-        fullName: 'Rosa Quispe',
+        fullName: 'Rosa Ficticia',
         documentType: 'DNI',
         documentNumber: '30111222',
         phone: null,

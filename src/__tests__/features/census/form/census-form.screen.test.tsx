@@ -27,7 +27,7 @@ jest.mock('@/src/infrastructure/location/currentLocation', () => ({
 }));
 
 const ID = '01a1d70a-496a-7a5e-bf6a-29b1b22455f3';
-const producer = { fullName: 'Rosa Quispe', documentType: 'DNI', documentNumber: '30111222' };
+const producer = { fullName: 'Rosa Ficticia', documentType: 'DNI', documentNumber: '30111222' };
 
 const draft = (
   payload: Record<string, unknown> = {},
