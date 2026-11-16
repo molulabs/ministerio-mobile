@@ -24,11 +24,13 @@ import {
 } from './producer.constants';
 import {
   type FarmValues,
+  hasContactOrAddress,
   hasProducer,
   newProducer,
   onlyDigits,
   type ProducerValues,
   registeredProducer,
+  withoutContactAndAddress,
 } from './producer.helper';
 
 type Props = {
@@ -47,6 +49,14 @@ const NATIONALITY_OPTIONS = COUNTRIES.map((country) => ({ label: country, value:
 export function ProducerStep({ producer, farm, newFarm, onChange }: Props) {
   const registered = useIsRegisteredProducer(producer.documentNumber);
   const set = (patch: Partial<ProducerValues>) => onChange({ producer: { ...producer, ...patch } });
+
+  // A new producer whose document turns out registered: what was typed of the contact and the
+  // address is no longer shown, so it does not go either (it would replace the office's data).
+  useEffect(() => {
+    if (registered && hasContactOrAddress(producer)) {
+      onChange({ producer: withoutContactAndAddress(producer) });
+    }
+  }, [registered, producer, onChange]);
 
   // Another producer is another person: the farm questions start over too.
   const choose = (next: ProducerValues) => onChange({ producer: next, newFarm: false });
@@ -115,84 +125,90 @@ export function ProducerStep({ producer, farm, newFarm, onChange }: Props) {
             placeholder={T.nationalityPlaceholder}
           />
 
-          <SectionHeader title={T.contact} />
-          <TextField
-            label={T.phone}
-            value={producer.phone}
-            onChangeText={(phone) => set({ phone })}
-            maxLength={MAX_LENGTH.phone}
-            keyboardType="phone-pad"
-          />
-          <TextField
-            label={T.email}
-            value={producer.email}
-            onChangeText={(email) => set({ email })}
-            maxLength={MAX_LENGTH.email}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+          {/* Of a registered producer the office already has the contact and the address: the
+              census does not ask them again (left empty, the API keeps them). */}
+          {!registered && (
+            <>
+              <SectionHeader title={T.contact} />
+              <TextField
+                label={T.phone}
+                value={producer.phone}
+                onChangeText={(phone) => set({ phone })}
+                maxLength={MAX_LENGTH.phone}
+                keyboardType="phone-pad"
+              />
+              <TextField
+                label={T.email}
+                value={producer.email}
+                onChangeText={(email) => set({ email })}
+                maxLength={MAX_LENGTH.email}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
 
-          <SectionHeader title={T.address} />
-          <TextField
-            label={T.street}
-            value={producer.street}
-            onChangeText={(street) => set({ street })}
-            maxLength={MAX_LENGTH.street}
-          />
-          <TextField
-            label={T.number}
-            value={producer.number}
-            onChangeText={(number) => set({ number })}
-            maxLength={MAX_LENGTH.number}
-          />
-          <SelectField
-            label={FIELD_TEXTS.department}
-            value={producer.department}
-            // The locality belongs to the department, so a new one starts it over.
-            onChange={(department) => set({ department, locality: null })}
-            options={DEPARTMENT_OPTIONS}
-            placeholder={FIELD_TEXTS.departmentPlaceholder}
-          />
-          <LocalityField
-            department={producer.department}
-            value={producer.locality}
-            onChange={(locality) => set({ locality })}
-          />
-          <TextField
-            label={T.postalCode}
-            value={producer.postalCode}
-            onChangeText={(postalCode) => set({ postalCode })}
-            maxLength={MAX_LENGTH.postalCode}
-          />
-          <TextField
-            label={T.paraje}
-            value={producer.paraje}
-            onChangeText={(paraje) => set({ paraje })}
-            maxLength={MAX_LENGTH.paraje}
-          />
-          <TextField
-            label={T.community}
-            value={producer.community}
-            onChangeText={(community) => set({ community })}
-            maxLength={MAX_LENGTH.community}
-          />
-          <TextField
-            label={T.apartment}
-            value={producer.apartment}
-            onChangeText={(apartment) => set({ apartment })}
-            maxLength={MAX_LENGTH.apartment}
-          />
-          <TextField
-            label={T.brandAndSignals}
-            value={producer.brandAndSignals}
-            onChangeText={(brandAndSignals) => set({ brandAndSignals })}
-            maxLength={MAX_LENGTH.brandAndSignals}
-          />
-          <CoordinatesFields
-            latitude={producer.latitude}
-            longitude={producer.longitude}
-            onChange={(latitude, longitude) => set({ latitude, longitude })}
-          />
+              <SectionHeader title={T.address} />
+              <TextField
+                label={T.street}
+                value={producer.street}
+                onChangeText={(street) => set({ street })}
+                maxLength={MAX_LENGTH.street}
+              />
+              <TextField
+                label={T.number}
+                value={producer.number}
+                onChangeText={(number) => set({ number })}
+                maxLength={MAX_LENGTH.number}
+              />
+              <SelectField
+                label={FIELD_TEXTS.department}
+                value={producer.department}
+                // The locality belongs to the department, so a new one starts it over.
+                onChange={(department) => set({ department, locality: null })}
+                options={DEPARTMENT_OPTIONS}
+                placeholder={FIELD_TEXTS.departmentPlaceholder}
+              />
+              <LocalityField
+                department={producer.department}
+                value={producer.locality}
+                onChange={(locality) => set({ locality })}
+              />
+              <TextField
+                label={T.postalCode}
+                value={producer.postalCode}
+                onChangeText={(postalCode) => set({ postalCode })}
+                maxLength={MAX_LENGTH.postalCode}
+              />
+              <TextField
+                label={T.paraje}
+                value={producer.paraje}
+                onChangeText={(paraje) => set({ paraje })}
+                maxLength={MAX_LENGTH.paraje}
+              />
+              <TextField
+                label={T.community}
+                value={producer.community}
+                onChangeText={(community) => set({ community })}
+                maxLength={MAX_LENGTH.community}
+              />
+              <TextField
+                label={T.apartment}
+                value={producer.apartment}
+                onChangeText={(apartment) => set({ apartment })}
+                maxLength={MAX_LENGTH.apartment}
+              />
+              <TextField
+                label={T.brandAndSignals}
+                value={producer.brandAndSignals}
+                onChangeText={(brandAndSignals) => set({ brandAndSignals })}
+                maxLength={MAX_LENGTH.brandAndSignals}
+              />
+              <CoordinatesFields
+                latitude={producer.latitude}
+                longitude={producer.longitude}
+                onChange={(latitude, longitude) => set({ latitude, longitude })}
+              />
+            </>
+          )}
 
           <FarmFields
             farm={farm}

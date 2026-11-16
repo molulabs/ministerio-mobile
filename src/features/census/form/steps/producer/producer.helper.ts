@@ -62,6 +62,32 @@ export const EMPTY_PRODUCER: ProducerValues = {
   longitude: '',
 };
 
+/** What the census does not ask a registered producer: the office already has it. */
+const CONTACT_AND_ADDRESS = [
+  'phone',
+  'email',
+  'street',
+  'number',
+  'department',
+  'locality',
+  'postalCode',
+  'paraje',
+  'community',
+  'apartment',
+  'brandAndSignals',
+  'latitude',
+  'longitude',
+] as const;
+
+export const hasContactOrAddress = (producer: ProducerValues) =>
+  CONTACT_AND_ADDRESS.some((key) => producer[key] !== EMPTY_PRODUCER[key]);
+
+/** The producer with the contact and the address empty, which the API reads as "keep". */
+export const withoutContactAndAddress = (producer: ProducerValues): ProducerValues => ({
+  ...producer,
+  ...Object.fromEntries(CONTACT_AND_ADDRESS.map((key) => [key, EMPTY_PRODUCER[key]])),
+});
+
 export const EMPTY_FARM: FarmValues = { renspa: '', producerLivesOnFarm: false };
 
 export const onlyDigits = (text: string) => text.replace(/\D/g, '');

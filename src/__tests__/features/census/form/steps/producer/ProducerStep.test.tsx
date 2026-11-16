@@ -51,6 +51,8 @@ async function renderStep(initial: Partial<State> = {}) {
 }
 
 const rosa = { ...EMPTY_PRODUCER, fullName: 'Rosa Ficticia', documentNumber: '30111222' };
+/** A producer the phone does not have: the census asks all their data. */
+const juan = { ...EMPTY_PRODUCER, fullName: 'Juan Inventado', documentNumber: '99999999' };
 
 describe('ProducerStep', () => {
   beforeEach(() => {
@@ -132,6 +134,42 @@ describe('ProducerStep', () => {
     expect(screen.queryByText('Finca')).toBeNull();
   });
 
+  it('does not ask a registered producer for the contact or the address', async () => {
+    await renderStep({ producer: rosa });
+
+    expect(screen.getByLabelText('Apellido y nombre')).toBeOnTheScreen();
+    expect(screen.queryByText('Contacto')).toBeNull();
+    expect(screen.queryByLabelText('Teléfono')).toBeNull();
+    expect(screen.queryByLabelText('Calle - Ruta')).toBeNull();
+    expect(screen.queryByLabelText('Departamento')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Usar mi ubicación' })).toBeNull();
+    expect(screen.getByLabelText('RENSPA N°')).toBeOnTheScreen();
+  });
+
+  it('empties the contact and the address when the typed document turns out registered', async () => {
+    const latest = await renderStep({ producer: juan });
+    await fireEvent.changeText(screen.getByLabelText('Teléfono'), '388 4123456');
+    await fireEvent.changeText(screen.getByLabelText('Calle - Ruta'), 'Belgrano');
+
+    await fireEvent.changeText(screen.getByLabelText('Número de documento'), '30111222');
+
+    await waitFor(() => expect(screen.queryByLabelText('Teléfono')).toBeNull());
+    expect(latest.current.producer).toMatchObject({
+      fullName: 'Juan Inventado',
+      documentNumber: '30111222',
+      phone: '',
+      street: '',
+    });
+  });
+
+  it('asks a new producer for the contact and the address', async () => {
+    await renderStep({ producer: juan });
+
+    expect(screen.getByLabelText('Teléfono')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Calle - Ruta')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Departamento')).toBeOnTheScreen();
+  });
+
   it('starts the farm over when another producer is chosen', async () => {
     const latest = await renderStep({ producer: rosa, newFarm: true });
 
@@ -163,7 +201,7 @@ describe('ProducerStep', () => {
   });
 
   it('picks the locality among the department ones, after the department', async () => {
-    const latest = await renderStep({ producer: rosa });
+    const latest = await renderStep({ producer: juan });
 
     expect(screen.getByText('Elegí primero el departamento.')).toBeOnTheScreen();
     await fireEvent.press(screen.getByLabelText('Departamento'));
@@ -175,7 +213,7 @@ describe('ProducerStep', () => {
   });
 
   it('adds a locality the phone does not have by its name', async () => {
-    const latest = await renderStep({ producer: { ...rosa, department: 'TILCARA' } });
+    const latest = await renderStep({ producer: { ...juan, department: 'TILCARA' } });
 
     await fireEvent.press(screen.getByLabelText('Localidad'));
     await fireEvent.changeText(screen.getByRole('search'), 'El Moreno');
@@ -191,7 +229,7 @@ describe('ProducerStep', () => {
       coords: { latitude: -23.5873214, longitude: -65.39642 },
       timestamp: 0,
     });
-    const latest = await renderStep({ producer: rosa });
+    const latest = await renderStep({ producer: juan });
 
     await fireEvent.press(screen.getByRole('button', { name: 'Usar mi ubicación' }));
 
@@ -205,7 +243,7 @@ describe('ProducerStep', () => {
 
   it('says so when the location is not allowed', async () => {
     mockRequestPermission.mockResolvedValue(false);
-    await renderStep({ producer: rosa });
+    await renderStep({ producer: juan });
 
     await fireEvent.press(screen.getByRole('button', { name: 'Usar mi ubicación' }));
 
