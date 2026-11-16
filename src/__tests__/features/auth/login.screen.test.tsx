@@ -44,6 +44,21 @@ describe('LoginScreen', () => {
     expect(mockSignIn).not.toHaveBeenCalled();
   });
 
+  it('shows the password with the eye and hides it again', async () => {
+    await renderLogin();
+
+    const password = screen.getByLabelText('Contraseña');
+    await fireEvent.changeText(password, 'secreta');
+    expect(password).toHaveProp('secureTextEntry', true);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Mostrar contraseña' }));
+    expect(screen.getByLabelText('Contraseña')).toHaveProp('secureTextEntry', false);
+    expect(screen.getByLabelText('Contraseña')).toHaveDisplayValue('secreta');
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Ocultar contraseña' }));
+    expect(screen.getByLabelText('Contraseña')).toHaveProp('secureTextEntry', true);
+  });
+
   it('rejects an invalid email', async () => {
     await renderLogin();
 

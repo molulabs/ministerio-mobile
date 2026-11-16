@@ -1,4 +1,4 @@
-import { Field, TextInput } from '@molulabs/ds';
+import { Field, PasswordInput, TextInput } from '@molulabs/ds';
 import type { ComponentType } from 'react';
 import type { TextInputProps as NativeTextInputProps } from 'react-native';
 
@@ -9,6 +9,16 @@ import type { TextInputProps as NativeTextInputProps } from 'react-native';
 const NativeInput = TextInput as unknown as ComponentType<
   Omit<NativeTextInputProps, 'style'> & {
     type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search';
+    invalid?: boolean;
+    disabled?: boolean;
+    mono?: boolean;
+    icon?: string;
+  }
+>;
+
+/** The design system's password input (an eye shows what was typed), typed the same way. */
+const NativePasswordInput = PasswordInput as unknown as ComponentType<
+  Omit<NativeTextInputProps, 'style'> & {
     invalid?: boolean;
     disabled?: boolean;
     mono?: boolean;
@@ -39,16 +49,22 @@ export function TextField({
   hint,
   required,
   disabled,
+  type,
   ...input
 }: Props) {
+  const shared = {
+    ...input,
+    accessibilityLabel: accessibilityLabel ?? label,
+    invalid: !!error,
+    disabled,
+  };
   return (
     <Field label={label} error={error} hint={hint} required={required}>
-      <NativeInput
-        {...input}
-        accessibilityLabel={accessibilityLabel ?? label}
-        invalid={!!error}
-        disabled={disabled}
-      />
+      {type === 'password' ? (
+        <NativePasswordInput {...shared} />
+      ) : (
+        <NativeInput {...shared} type={type} />
+      )}
     </Field>
   );
 }
