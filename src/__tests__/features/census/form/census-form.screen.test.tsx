@@ -18,7 +18,7 @@ jest.mock('@/src/features/census/census.repository', () => ({
 // The producer step reads the phone's catalogs and the GPS, which tests do not open.
 jest.mock('@/src/features/census/catalogs.queries', () => ({
   searchProducers: async () => [],
-  useIsRegisteredProducer: () => false,
+  useRegisteredProducer: () => null,
   useLocalities: () => [],
 }));
 jest.mock('@/src/infrastructure/location/currentLocation', () => ({

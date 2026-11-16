@@ -59,7 +59,7 @@ jest.mock('@/src/infrastructure/network/network.monitor', () => ({
 jest.mock('@maplibre/maplibre-react-native', () => ({}));
 jest.mock('@/src/features/census/catalogs.queries', () => ({
   searchProducers: async () => [],
-  useIsRegisteredProducer: () => false,
+  useRegisteredProducer: () => null,
   useLocalities: () => [],
 }));
 jest.mock('@/src/features/maps/useOfflineMap', () => ({

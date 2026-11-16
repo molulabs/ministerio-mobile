@@ -37,8 +37,7 @@ export const PRODUCER_TEXTS = {
   searchPlaceholder: 'Ej. 28451902',
   searchEmpty: 'Ningún productor registrado tiene ese documento',
   create: (text: string) => `Crear productor «${text}»`,
-  registered:
-    'Productor registrado. Lo que completes reemplaza sus datos; lo que dejes vacío no borra nada.',
+  registered: 'Productor registrado: sus datos ya los tiene la oficina.',
   newProducer: 'Productor nuevo: se registra al enviar el censo.',
   data: 'Datos del productor',
   fullName: 'Apellido y nombre',

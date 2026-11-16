@@ -11,10 +11,12 @@ import {
 
 // The registered producers and the localities live in the local database, which tests do not open.
 const mockSearchProducers = jest.fn();
-const mockRegistered = new Set(['30111222']);
+const mockRegistered = new Map([
+  ['30111222', { documentNumber: '30111222', fullName: 'Rosa Ficticia' }],
+]);
 jest.mock('@/src/features/census/catalogs.queries', () => ({
   searchProducers: (text: string) => mockSearchProducers(text),
-  useIsRegisteredProducer: (documentNumber: string) => mockRegistered.has(documentNumber),
+  useRegisteredProducer: (documentNumber: string) => mockRegistered.get(documentNumber) ?? null,
   useLocalities: (department: string) =>
     department === 'TILCARA' ? [{ id: 4, name: 'Maimará' }] : [],
 }));
@@ -75,9 +77,7 @@ describe('ProducerStep', () => {
       documentNumber: '30111222',
     });
     expect(
-      screen.getByText(
-        'Productor registrado. Lo que completes reemplaza sus datos; lo que dejes vacío no borra nada.',
-      ),
+      screen.getByText('Productor registrado: sus datos ya los tiene la oficina.'),
     ).toBeOnTheScreen();
     // Their document is the one the API knows them by: it is not edited.
     expect(screen.queryByLabelText('Número de documento')).toBeNull();
@@ -134,10 +134,20 @@ describe('ProducerStep', () => {
     expect(screen.queryByText('Finca')).toBeNull();
   });
 
+  it('shows a registered producer only by the name and the document, not editable', async () => {
+    await renderStep({ producer: rosa });
+
+    expect(screen.getByLabelText('Apellido y nombre')).toBeDisabled();
+    expect(screen.getByLabelText('Apellido y nombre')).toHaveDisplayValue('Rosa Ficticia');
+    expect(screen.getByLabelText('Documento')).toBeDisabled();
+    expect(screen.queryByLabelText('CUIL')).toBeNull();
+    expect(screen.queryByLabelText('Fecha de nacimiento')).toBeNull();
+    expect(screen.queryByLabelText('Nacionalidad')).toBeNull();
+  });
+
   it('does not ask a registered producer for the contact or the address', async () => {
     await renderStep({ producer: rosa });
 
-    expect(screen.getByLabelText('Apellido y nombre')).toBeOnTheScreen();
     expect(screen.queryByText('Contacto')).toBeNull();
     expect(screen.queryByLabelText('Teléfono')).toBeNull();
     expect(screen.queryByLabelText('Calle - Ruta')).toBeNull();
@@ -146,8 +156,9 @@ describe('ProducerStep', () => {
     expect(screen.getByLabelText('RENSPA N°')).toBeOnTheScreen();
   });
 
-  it('empties the contact and the address when the typed document turns out registered', async () => {
+  it('takes the office data when the typed document turns out registered', async () => {
     const latest = await renderStep({ producer: juan });
+    await fireEvent.changeText(screen.getByLabelText('CUIL'), '20999999993');
     await fireEvent.changeText(screen.getByLabelText('Teléfono'), '388 4123456');
     await fireEvent.changeText(screen.getByLabelText('Calle - Ruta'), 'Belgrano');
 
@@ -155,8 +166,9 @@ describe('ProducerStep', () => {
 
     await waitFor(() => expect(screen.queryByLabelText('Teléfono')).toBeNull());
     expect(latest.current.producer).toMatchObject({
-      fullName: 'Juan Inventado',
+      fullName: 'Rosa Ficticia',
       documentNumber: '30111222',
+      cuil: '',
       phone: '',
       street: '',
     });

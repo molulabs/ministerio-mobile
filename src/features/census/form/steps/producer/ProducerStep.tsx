@@ -10,7 +10,7 @@ import { TextField } from '@/src/shared/ui/TextField';
 import {
   type IndexedProducer,
   searchProducers,
-  useIsRegisteredProducer,
+  useRegisteredProducer,
 } from '../../../catalogs.queries';
 import { CoordinatesFields } from '../../fields/CoordinatesFields';
 import { DEPARTMENT_OPTIONS, FIELD_TEXTS } from '../../fields/fields.constants';
@@ -23,14 +23,14 @@ import {
   PRODUCER_TEXTS as T,
 } from './producer.constants';
 import {
+  asRegistered,
   type FarmValues,
-  hasContactOrAddress,
   hasProducer,
+  isAsRegistered,
   newProducer,
   onlyDigits,
   type ProducerValues,
   registeredProducer,
-  withoutContactAndAddress,
 } from './producer.helper';
 
 type Props = {
@@ -47,16 +47,17 @@ const NATIONALITY_OPTIONS = COUNTRIES.map((country) => ({ label: country, value:
  * registered ones, or start a new one from the text searched; then their data and the farm's.
  */
 export function ProducerStep({ producer, farm, newFarm, onChange }: Props) {
-  const registered = useIsRegisteredProducer(producer.documentNumber);
+  const found = useRegisteredProducer(producer.documentNumber);
+  const registered = found !== null;
   const set = (patch: Partial<ProducerValues>) => onChange({ producer: { ...producer, ...patch } });
 
-  // A new producer whose document turns out registered: what was typed of the contact and the
-  // address is no longer shown, so it does not go either (it would replace the office's data).
+  // A registered producer goes with the office's name and nothing else typed: also a new one whose
+  // document turns out registered, whose typed data is no longer shown (it would replace theirs).
   useEffect(() => {
-    if (registered && hasContactOrAddress(producer)) {
-      onChange({ producer: withoutContactAndAddress(producer) });
+    if (found && !isAsRegistered(producer, found)) {
+      onChange({ producer: asRegistered(producer, found) });
     }
-  }, [registered, producer, onChange]);
+  }, [found, producer, onChange]);
 
   // Another producer is another person: the farm questions start over too.
   const choose = (next: ProducerValues) => onChange({ producer: next, newFarm: false });
@@ -74,18 +75,22 @@ export function ProducerStep({ producer, farm, newFarm, onChange }: Props) {
           <Text variant="muted">{registered ? T.registered : T.newProducer}</Text>
 
           <SectionHeader title={T.data} />
-          <TextField
-            label={T.fullName}
-            required
-            value={producer.fullName}
-            onChangeText={(fullName) => set({ fullName })}
-            maxLength={MAX_LENGTH.fullName}
-            autoCapitalize="words"
-          />
           {registered ? (
-            <TextField label={T.document} value={producer.documentNumber} disabled />
+            // The office's data: shown to tell it is the right person, not edited here.
+            <>
+              <TextField label={T.fullName} value={producer.fullName} disabled />
+              <TextField label={T.document} value={producer.documentNumber} disabled />
+            </>
           ) : (
             <>
+              <TextField
+                label={T.fullName}
+                required
+                value={producer.fullName}
+                onChangeText={(fullName) => set({ fullName })}
+                maxLength={MAX_LENGTH.fullName}
+                autoCapitalize="words"
+              />
               <SelectField
                 label={T.documentType}
                 required
@@ -102,31 +107,30 @@ export function ProducerStep({ producer, farm, newFarm, onChange }: Props) {
                 keyboardType={producer.documentType === 'PASAPORTE' ? 'default' : 'number-pad'}
                 autoCapitalize="characters"
               />
+              <TextField
+                label={T.cuil}
+                value={producer.cuil}
+                onChangeText={(cuil) => set({ cuil })}
+                maxLength={MAX_LENGTH.cuil}
+                keyboardType="number-pad"
+              />
+              <Field label={T.birthDate}>
+                <DateInput
+                  value={producer.birthDate}
+                  onChange={(birthDate: string) => set({ birthDate })}
+                />
+              </Field>
+              <AutocompleteField
+                label={T.nationality}
+                valueLabel={producer.nationality}
+                options={NATIONALITY_OPTIONS}
+                onPick={(option) => set({ nationality: option.value })}
+                placeholder={T.nationalityPlaceholder}
+              />
             </>
           )}
-          <TextField
-            label={T.cuil}
-            value={producer.cuil}
-            onChangeText={(cuil) => set({ cuil })}
-            maxLength={MAX_LENGTH.cuil}
-            keyboardType="number-pad"
-          />
-          <Field label={T.birthDate}>
-            <DateInput
-              value={producer.birthDate}
-              onChange={(birthDate: string) => set({ birthDate })}
-            />
-          </Field>
-          <AutocompleteField
-            label={T.nationality}
-            valueLabel={producer.nationality}
-            options={NATIONALITY_OPTIONS}
-            onPick={(option) => set({ nationality: option.value })}
-            placeholder={T.nationalityPlaceholder}
-          />
 
-          {/* Of a registered producer the office already has the contact and the address: the
-              census does not ask them again (left empty, the API keeps them). */}
+          {/* Nor the contact and the address: the office has them (empty, the API keeps them). */}
           {!registered && (
             <>
               <SectionHeader title={T.contact} />

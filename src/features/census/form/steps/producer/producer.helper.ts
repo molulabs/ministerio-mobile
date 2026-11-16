@@ -62,8 +62,14 @@ export const EMPTY_PRODUCER: ProducerValues = {
   longitude: '',
 };
 
-/** What the census does not ask a registered producer: the office already has it. */
-const CONTACT_AND_ADDRESS = [
+/**
+ * What the census does not ask a registered producer: the office already has it. Of them it only
+ * shows the name and the document, and those are not edited.
+ */
+const KEPT_BY_THE_OFFICE = [
+  'birthDate',
+  'nationality',
+  'cuil',
   'phone',
   'email',
   'street',
@@ -79,14 +85,20 @@ const CONTACT_AND_ADDRESS = [
   'longitude',
 ] as const;
 
-export const hasContactOrAddress = (producer: ProducerValues) =>
-  CONTACT_AND_ADDRESS.some((key) => producer[key] !== EMPTY_PRODUCER[key]);
-
-/** The producer with the contact and the address empty, which the API reads as "keep". */
-export const withoutContactAndAddress = (producer: ProducerValues): ProducerValues => ({
+/**
+ * The registered producer as the census sends it: the office's name, and the rest empty, which the
+ * API reads as "keep". Nothing typed of a producer that turns out registered replaces their data.
+ */
+export const asRegistered = (producer: ProducerValues, found: IndexedProducer): ProducerValues => ({
   ...producer,
-  ...Object.fromEntries(CONTACT_AND_ADDRESS.map((key) => [key, EMPTY_PRODUCER[key]])),
+  ...Object.fromEntries(KEPT_BY_THE_OFFICE.map((key) => [key, EMPTY_PRODUCER[key]])),
+  fullName: found.fullName,
 });
+
+/** Whether the producer already goes as asRegistered does. */
+export const isAsRegistered = (producer: ProducerValues, found: IndexedProducer) =>
+  producer.fullName === found.fullName &&
+  KEPT_BY_THE_OFFICE.every((key) => producer[key] === EMPTY_PRODUCER[key]);
 
 export const EMPTY_FARM: FarmValues = { renspa: '', producerLivesOnFarm: false };
 
