@@ -261,6 +261,8 @@ function ProducerSearch({
           }
           placeholder={T.searchPlaceholder}
           emptyLabel={T.searchEmpty}
+          // DNI or CUIL: digits only, so the numeric keyboard.
+          type="number"
         />
       </Field>
     </>

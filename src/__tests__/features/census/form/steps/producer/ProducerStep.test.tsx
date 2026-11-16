@@ -108,6 +108,14 @@ describe('ProducerStep', () => {
     expect(screen.queryByText('Crear productor «30111222»')).toBeNull();
   });
 
+  it('searches with the numeric keyboard: a DNI or a CUIL', async () => {
+    await renderStep();
+
+    await fireEvent.press(screen.getByLabelText('DNI o CUIL'));
+
+    expect(screen.getByRole('search').props.keyboardType).toBe('numeric');
+  });
+
   it('does not search with fewer than 3 characters', async () => {
     await renderStep();
 
