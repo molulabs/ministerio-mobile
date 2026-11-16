@@ -6,13 +6,17 @@ import {
 import { LoginScreen } from '@/src/features/auth/screens/login.screen';
 import { useSession } from '@/src/features/auth/session.store';
 import { CensusFormScreen } from '@/src/features/census/form/census-form.screen';
+import { LocationPicker } from '@/src/features/maps/components/LocationPicker';
 
 import { MainTabs } from './MainTabs';
 import type { RootStackParamList } from './routes';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-/** The census form gets its draft and the session user from here: features do not navigate. */
+/**
+ * The census form gets its draft and the session user from here: features do not navigate. It
+ * gets the map to choose the coordinates on from here too: features do not import each other.
+ */
 function CensusFormRoute({
   route,
   navigation,
@@ -20,7 +24,12 @@ function CensusFormRoute({
   const userId = useSession((state) => state.user?.id);
   if (userId === undefined) return null;
   return (
-    <CensusFormScreen id={route.params.id} userId={userId} onClose={() => navigation.goBack()} />
+    <CensusFormScreen
+      id={route.params.id}
+      userId={userId}
+      onClose={() => navigation.goBack()}
+      renderLocationPicker={(props) => <LocationPicker {...props} />}
+    />
   );
 }
 

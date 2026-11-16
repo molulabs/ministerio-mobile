@@ -31,6 +31,7 @@ export const FIELD_TEXTS = {
   latitude: 'Latitud',
   longitude: 'Longitud',
   useLocation: 'Usar mi ubicación',
+  pickOnMap: 'Elegir en el mapa',
   locating: 'Buscando ubicación...',
   locationDenied: 'Sin permiso de ubicación. Habilitalo en los ajustes del teléfono.',
   noLocation: 'No se pudo obtener la ubicación. Probá al aire libre.',

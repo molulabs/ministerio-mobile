@@ -1,40 +1,29 @@
 import {
   Camera,
   type CameraRef,
-  LocationManager,
   Map,
   type MapRef,
   type PressEvent,
 } from '@maplibre/maplibre-react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { useMapDownload } from '@/src/infrastructure/sync/mapDownload.store';
 import { texts } from '@/src/shared/constants/texts';
 
 import { CoordinatesCard } from '../components/CoordinatesCard';
 import { LOCATION_PUCK_LAYERS, LocationPuck } from '../components/LocationPuck';
-import { MapIcon, type MapIconName } from '../components/mapIcons';
+import { MapButton } from '../components/MapButton';
 import { PickedPoint } from '../components/PickedPoint';
-import { currentLocation } from '@/src/infrastructure/location/currentLocation';
-import { useGpsPosition } from '@/src/infrastructure/location/useGpsPosition';
+import { useMyLocation, ANIMATION_MS } from '../useMyLocation';
 import { useOfflineMap } from '../useOfflineMap';
-
-const ANIMATION_MS = 250;
-/** Close enough to see the paths and fences around a farm. */
-const LOCATION_ZOOM = 15;
-
-type LngLatBounds = [number, number, number, number];
 
 /** Pixels around a press that still hit the location puck: a finger is wider than the dot. */
 const PUCK_HIT_PX = 24;
 
 /** Whose coordinates the card shows: the location (live) or a point chosen with a long press. */
 type Selection = { kind: 'position' } | { kind: 'point'; lngLat: [number, number] } | null;
-
-const contains = ([west, south, east, north]: LngLatBounds, [lng, lat]: [number, number]) =>
-  lng >= west && lng <= east && lat >= south && lat <= north;
 
 /**
  * The map of Jujuy from the packages on the phone: it never asks the network for tiles. The
@@ -46,13 +35,13 @@ export function MapScreen() {
   const focused = useIsFocused();
   const mapRef = useRef<MapRef>(null);
   const cameraRef = useRef<CameraRef>(null);
-  /** The location puck, shown from the first press on: it moves by itself with the GPS. */
-  const [locating, setLocating] = useState(false);
-  /** Why the location is not followed, shown over the map until the next try. */
-  const [notice, setNotice] = useState<string | null>(null);
   const [selection, setSelection] = useState<Selection>(null);
   // Only while the tab is in sight: the tabs stay mounted, and the GPS costs battery.
-  const position = useGpsPosition(locating && focused);
+  const { position, notice, setNotice, showMyLocation } = useMyLocation({
+    camera: cameraRef,
+    bounds: map?.bounds ?? null,
+    enabled: focused,
+  });
 
   if (!map) {
     const message = error
@@ -94,34 +83,6 @@ export function MapScreen() {
   const onLongPress = ({ lngLat }: PressEvent) => {
     setNotice(null);
     setSelection({ kind: 'point', lngLat });
-  };
-
-  /**
-   * Centres on the location, close enough to see the farm around it. The camera does not follow
-   * it afterwards: the enumerator moves the map freely and presses again to come back. A location
-   * outside the map (another province) is not shown: the camera would end at its edge.
-   */
-  const showMyLocation = async () => {
-    setNotice(null);
-    if (!(await LocationManager.requestPermissions())) {
-      setNotice(texts.map.locationDenied);
-      return;
-    }
-    setLocating(true);
-    setNotice(texts.map.searchingLocation);
-
-    const position = await currentLocation();
-    setNotice(null);
-    if (!position) {
-      setNotice(texts.map.noLocation);
-      return;
-    }
-    const here: [number, number] = [position.coords.longitude, position.coords.latitude];
-    if (map.bounds && !contains(map.bounds, here)) {
-      setNotice(texts.map.outsideMap);
-      return;
-    }
-    cameraRef.current?.easeTo({ center: here, zoom: LOCATION_ZOOM, duration: ANIMATION_MS });
   };
 
   return (
@@ -181,26 +142,6 @@ export function MapScreen() {
   );
 }
 
-type MapButtonProps = {
-  label: string;
-  icon: MapIconName;
-  onPress: () => void;
-};
-
-/** A round button over the map: big enough to press with gloves. */
-function MapButton({ label, icon, onPress }: MapButtonProps) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      onPress={onPress}
-      style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-    >
-      <MapIcon name={icon} />
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -222,18 +163,6 @@ const styles = StyleSheet.create({
     right: 12,
     bottom: 48,
     gap: 10,
-  },
-  button: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
-  },
-  buttonPressed: {
-    backgroundColor: '#dbe8fb',
   },
   notice: {
     position: 'absolute',

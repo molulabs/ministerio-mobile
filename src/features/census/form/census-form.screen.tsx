@@ -28,6 +28,7 @@ import {
   missingToFinish,
   toCensusPayload,
 } from './censusForm.model';
+import { LocationPickerContext, type RenderLocationPicker } from './fields/locationPicker.context';
 import { CENSUS_STEPS, clampStep, LAST_STEP, stepOfField } from './censusForm.steps';
 import { FamilyFinancesStep } from './steps/familyFinances/FamilyFinancesStep';
 import { CropsStep } from './steps/crops/CropsStep';
@@ -47,6 +48,8 @@ type Props = {
   userId: number;
   /** Leaves the form: done, discarded, or back. */
   onClose: () => void;
+  /** The map to choose the coordinates on; without one they are typed or taken from the GPS. */
+  renderLocationPicker?: RenderLocationPicker;
 };
 
 type Loaded = {
@@ -57,7 +60,7 @@ type Loaded = {
 };
 
 /** A census being taken: the web's wizard, saved on the phone as the enumerator goes. */
-export function CensusFormScreen({ id, userId, onClose }: Props) {
+export function CensusFormScreen({ id, userId, onClose, renderLocationPicker }: Props) {
   const [loaded, setLoaded] = useState<Loaded | 'loading' | 'gone'>('loading');
 
   useEffect(() => {
@@ -102,7 +105,11 @@ export function CensusFormScreen({ id, userId, onClose }: Props) {
     );
   }
 
-  return <CensusWizard id={id} userId={userId} initial={loaded} onClose={onClose} />;
+  return (
+    <LocationPickerContext.Provider value={renderLocationPicker ?? null}>
+      <CensusWizard id={id} userId={userId} initial={loaded} onClose={onClose} />
+    </LocationPickerContext.Provider>
+  );
 }
 
 function CensusWizard({ id, userId, initial, onClose }: Props & { initial: Loaded }) {

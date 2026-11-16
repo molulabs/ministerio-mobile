@@ -153,6 +153,10 @@ export const texts = {
     noLocation: 'Todavía no hay señal de GPS. Probá de nuevo en un momento, al aire libre.',
     locationDenied:
       'Sin permiso de ubicación no se puede mostrar dónde estás. Podés darlo en los ajustes del teléfono.',
+    pickTitle: 'Elegí la ubicación',
+    pickHint: 'Mové el mapa hasta que el punto rojo quede sobre el lugar.',
+    pickConfirm: 'Confirmar ubicación',
+    pickCancel: 'Cancelar',
   },
   profile: {
     greeting: (firstname: string) => `Hola, ${firstname}`,

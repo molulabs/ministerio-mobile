@@ -1,5 +1,6 @@
 import { Button } from '@molulabs/ds';
 import { useState } from 'react';
+import { Modal } from 'react-native';
 
 import {
   currentLocation,
@@ -10,6 +11,7 @@ import { TextField } from '@/src/shared/ui/TextField';
 import { formatDegrees } from '@/src/shared/utilities/coordinates';
 
 import { FIELD_TEXTS as T } from './fields.constants';
+import { useLocationPicker } from './locationPicker.context';
 
 type Props = {
   latitude: string;
@@ -20,9 +22,21 @@ type Props = {
 
 type Locating = 'idle' | 'locating' | 'denied' | 'none';
 
-/** Latitude and longitude, typed or taken from the GPS (it needs no signal). */
+/** The typed coordinates as [longitude, latitude], when they are a place on Earth. */
+const typedPoint = (latitude: string, longitude: string): [number, number] | null => {
+  if (!latitude.trim() || !longitude.trim()) return null;
+  const lat = Number(latitude);
+  const lng = Number(longitude);
+  return Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180
+    ? [lng, lat]
+    : null;
+};
+
+/** Latitude and longitude: typed, taken from the GPS (it needs no signal) or chosen on the map. */
 export function CoordinatesFields({ latitude, longitude, onChange, errors = {} }: Props) {
   const [locating, setLocating] = useState<Locating>('idle');
+  const renderLocationPicker = useLocationPicker();
+  const [picking, setPicking] = useState(false);
 
   const locate = async () => {
     if (!(await requestLocationPermission())) {
@@ -69,7 +83,38 @@ export function CoordinatesFields({ latitude, longitude, onChange, errors = {} }
       >
         {locating === 'locating' ? T.locating : T.useLocation}
       </Button>
+      {renderLocationPicker && (
+        <Button
+          tone="secondary"
+          icon="ti-map-pin"
+          onClick={() => setPicking(true)}
+          aria-label={T.pickOnMap}
+        >
+          {T.pickOnMap}
+        </Button>
+      )}
       {notice && <Text variant="muted">{notice}</Text>}
+      {renderLocationPicker && (
+        <Modal
+          visible={picking}
+          animationType="slide"
+          // Edge to edge: the picker keeps clear of the bars with the safe area.
+          statusBarTranslucent
+          navigationBarTranslucent
+          onRequestClose={() => setPicking(false)}
+        >
+          {picking &&
+            renderLocationPicker({
+              initial: typedPoint(latitude, longitude),
+              onConfirm: ([lng, lat]) => {
+                setPicking(false);
+                setLocating('idle');
+                onChange(formatDegrees(lat), formatDegrees(lng));
+              },
+              onCancel: () => setPicking(false),
+            })}
+        </Modal>
+      )}
     </>
   );
 }
