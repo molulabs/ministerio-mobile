@@ -17,7 +17,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: 'Censo productores',
   slug: 'censo-scad-jujuy',
-  version: '0.3.0',
+  version: '0.4.0',
+  // OTA updates (EAS Update): an update only reaches the builds of the same version, so a native
+  // change (a new native package, an SDK upgrade) needs a new version and a new APK, and a JS-only
+  // change ships as an update keeping the version.
+  runtimeVersion: { policy: 'appVersion' },
+  updates: { url: 'https://u.expo.dev/b23dd739-66d9-4eaf-b925-cb26694f3158' },
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'light',

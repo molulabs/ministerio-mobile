@@ -16,7 +16,8 @@
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "update:preview": "API_URL=https://censo.scadjujuy.gob.ar pnpm dlx eas-cli@latest update --channel preview --environment preview"
   },
   "dependencies": {
     "@maplibre/maplibre-react-native": "^11.5.1",
