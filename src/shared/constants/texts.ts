@@ -91,6 +91,7 @@ export const texts = {
       missing: {
         date: 'La fecha del censo.',
         producer: 'El nombre y el documento del productor.',
+        farm: 'Qué finca del productor se censa.',
         forestation: 'La especie y el tipo de cada fila de forestación (Insumos).',
       },
       toFixTitle: 'El servidor no aceptó estos datos',

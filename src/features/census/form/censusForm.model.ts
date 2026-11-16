@@ -47,7 +47,7 @@ import {
 } from './steps/productionUnit/productionUnit.helper';
 
 /** The payload version the API reads (CensusSubmissionService::SCHEMA_VERSION). */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 /** The parts of the payload each step fills, shaped like the request the web saves that step with. */
 export const CENSUS_SECTIONS = [
@@ -71,8 +71,10 @@ export type CensusPayload = {
   date: string | null;
   formNumber: string | null;
   observations: string | null;
-  /** "Es otra finca del productor": the API gives the census a new farm. */
+  /** "Otra finca": a farm of the producer not censused yet, so the API gives the census a new one. */
   newFarm: boolean;
+  /** The producer's farm chosen from the catalogs (schema 3); null for a new one or none known. */
+  farmId: number | null;
 } & Record<CensusSection, Section>;
 
 /** What the wizard edits: each step keeps its values as typed, and its helper turns them into its section. */
@@ -81,6 +83,7 @@ export type CensusFormValues = {
   formNumber: string;
   observations: string;
   newFarm: boolean;
+  farmId: number | null;
   producer: ProducerValues;
   familyFinances: FamilyFinancesValues;
   /** RENSPA and "vive en la finca": asked with the producer, sent in productionUnit. */
@@ -105,6 +108,7 @@ export function emptyCensusValues(now: Date): CensusFormValues {
     formNumber: '',
     observations: '',
     newFarm: false,
+    farmId: null,
     producer: EMPTY_PRODUCER,
     familyFinances: EMPTY_FAMILY_FINANCES,
     farm: EMPTY_FARM,
@@ -125,6 +129,7 @@ export function toCensusPayload(values: CensusFormValues): CensusPayload {
     formNumber: textOrNull(values.formNumber),
     observations: textOrNull(values.observations),
     newFarm: values.newFarm,
+    farmId: values.farmId,
     producer: toProducerPayload(values.producer),
     familyFinances: toFamilyFinancesPayload(values.familyFinances),
     productionUnit: {
@@ -157,6 +162,7 @@ export function fromCensusPayload(payload: Record<string, unknown>): CensusFormV
     formNumber: stringOr(payload.formNumber, ''),
     observations: stringOr(payload.observations, ''),
     newFarm: payload.newFarm === true,
+    farmId: typeof payload.farmId === 'number' ? payload.farmId : null,
     producer: fromProducerPayload(sectionOf(payload, 'producer')),
     familyFinances: fromFamilyFinancesPayload(sectionOf(payload, 'familyFinances')),
     farm: fromFarmPayload(productionUnit),
@@ -168,20 +174,25 @@ export function fromCensusPayload(payload: Record<string, unknown>): CensusFormV
   };
 }
 
-export type MissingToFinish = 'date' | 'producer' | 'forestation';
+export type MissingToFinish = 'date' | 'producer' | 'farm' | 'forestation';
 
 /**
  * What stops a census from being finished: the API would only reject it, or the phone would leave
  * out what was typed (a forest row without its species or type). Everything else the API checks,
  * and a 422 brings the census back to fix.
  */
-export function missingToFinish(values: CensusFormValues): MissingToFinish[] {
+export function missingToFinish(
+  values: CensusFormValues,
+  /** How many farms the phone knows of the producer: with any, which one must be chosen. */
+  producerFarms = 0,
+): MissingToFinish[] {
   const missing: MissingToFinish[] = [];
   if (values.date === '') missing.push('date');
   const { fullName, documentType, documentNumber } = values.producer;
   if ([fullName, documentType, documentNumber].some((field) => field.trim() === '')) {
     missing.push('producer');
   }
+  if (producerFarms > 0 && values.farmId === null && !values.newFarm) missing.push('farm');
   if (hasIncompleteForestation(values.farmInputs)) missing.push('forestation');
   return missing;
 }

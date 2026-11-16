@@ -13,10 +13,33 @@ import {
 const mockSearchProducers = jest.fn();
 const mockRegistered = new Map([
   ['30111222', { documentNumber: '30111222', fullName: 'Rosa Ficticia' }],
+  ['30333444', { documentNumber: '30333444', fullName: 'Elsa Ensayo' }],
+]);
+const mockFarms = new Map([
+  [
+    '30333444',
+    [
+      {
+        id: 7,
+        number: 1,
+        label: 'Finca 1 · 12.345.6.78901/01 · Yavi Chico',
+        renspa: '12.345.6.78901/01',
+        producerLivesOnFarm: true,
+      },
+      {
+        id: 9,
+        number: 2,
+        label: 'Finca 2 · Sin RENSPA ni ubicación',
+        renspa: null,
+        producerLivesOnFarm: null,
+      },
+    ],
+  ],
 ]);
 jest.mock('@/src/features/census/catalogs.queries', () => ({
   searchProducers: (text: string) => mockSearchProducers(text),
   useRegisteredProducer: (documentNumber: string) => mockRegistered.get(documentNumber) ?? null,
+  useProducerFarms: (documentNumber: string) => mockFarms.get(documentNumber) ?? [],
   useLocalities: (department: string) =>
     department === 'TILCARA' ? [{ id: 4, name: 'Maimará' }] : [],
 }));
@@ -27,12 +50,23 @@ jest.mock('@/src/infrastructure/location/currentLocation', () => ({
   requestLocationPermission: () => mockRequestPermission(),
 }));
 
-type State = { producer: ProducerValues; farm: FarmValues; newFarm: boolean };
+type State = {
+  producer: ProducerValues;
+  farm: FarmValues;
+  newFarm: boolean;
+  farmId: number | null;
+};
 
 /** The step as the wizard holds it, with what it was last given. */
 async function renderStep(initial: Partial<State> = {}) {
   const latest: { current: State } = {
-    current: { producer: EMPTY_PRODUCER, farm: EMPTY_FARM, newFarm: false, ...initial },
+    current: {
+      producer: EMPTY_PRODUCER,
+      farm: EMPTY_FARM,
+      newFarm: false,
+      farmId: null,
+      ...initial,
+    },
   };
   function Host() {
     const [state, setState] = useState(latest.current);
@@ -55,6 +89,8 @@ async function renderStep(initial: Partial<State> = {}) {
 const rosa = { ...EMPTY_PRODUCER, fullName: 'Rosa Ficticia', documentNumber: '30111222' };
 /** A producer the phone does not have: the census asks all their data. */
 const juan = { ...EMPTY_PRODUCER, fullName: 'Juan Inventado', documentNumber: '99999999' };
+/** A registered producer with two farms on the phone. */
+const elsa = { ...EMPTY_PRODUCER, fullName: 'Elsa Ensayo', documentNumber: '30333444' };
 
 describe('ProducerStep', () => {
   beforeEach(() => {
@@ -182,8 +218,39 @@ describe('ProducerStep', () => {
     expect(screen.getByLabelText('Departamento')).toBeOnTheScreen();
   });
 
+  it('asks which of the producer farms is censused before its RENSPA', async () => {
+    await renderStep({ producer: elsa });
+
+    expect(screen.getByText('Finca 1 · 12.345.6.78901/01 · Yavi Chico')).toBeOnTheScreen();
+    expect(screen.getByText('Finca 2 · Sin RENSPA ni ubicación')).toBeOnTheScreen();
+    expect(screen.getByText('Otra finca')).toBeOnTheScreen();
+    expect(screen.queryByText('Es otra finca del productor')).toBeNull();
+    expect(screen.queryByLabelText('RENSPA N°')).toBeNull();
+  });
+
+  it('fills the RENSPA and whether the producer lives there from the farm chosen', async () => {
+    const latest = await renderStep({ producer: elsa });
+
+    await fireEvent.press(screen.getByText('Finca 1 · 12.345.6.78901/01 · Yavi Chico'));
+
+    expect(latest.current).toMatchObject({
+      farmId: 7,
+      newFarm: false,
+      farm: { renspa: '12.345.6.78901/01', producerLivesOnFarm: true },
+    });
+    expect(screen.getByLabelText('RENSPA N°')).toHaveDisplayValue('12.345.6.78901/01');
+  });
+
+  it('starts another farm of the producer empty', async () => {
+    const latest = await renderStep({ producer: elsa, farmId: 7 });
+
+    await fireEvent.press(screen.getByText('Otra finca'));
+
+    expect(latest.current).toMatchObject({ farmId: null, newFarm: true, farm: EMPTY_FARM });
+  });
+
   it('starts the farm over when another producer is chosen', async () => {
-    const latest = await renderStep({ producer: rosa, newFarm: true });
+    const latest = await renderStep({ producer: elsa, newFarm: true, farmId: 7 });
 
     await fireEvent.press(screen.getByLabelText('DNI o CUIL'));
     await fireEvent.changeText(screen.getByRole('search'), 'Juan');
@@ -191,6 +258,7 @@ describe('ProducerStep', () => {
 
     expect(latest.current.producer.fullName).toBe('Juan');
     expect(latest.current.newFarm).toBe(false);
+    expect(latest.current.farmId).toBeNull();
   });
 
   it('asks whether it is another farm only of a registered producer', async () => {

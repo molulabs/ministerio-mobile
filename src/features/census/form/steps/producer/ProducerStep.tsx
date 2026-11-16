@@ -10,12 +10,13 @@ import { TextField } from '@/src/shared/ui/TextField';
 import {
   type IndexedProducer,
   searchProducers,
+  useProducerFarms,
   useRegisteredProducer,
 } from '../../../catalogs.queries';
 import { CoordinatesFields } from '../../fields/CoordinatesFields';
 import { DEPARTMENT_OPTIONS, FIELD_TEXTS } from '../../fields/fields.constants';
 import { LocalityField } from '../../fields/LocalityField';
-import { FarmFields } from './FarmFields';
+import { FarmFields, type FarmPatch } from './FarmFields';
 import {
   DOCUMENT_TYPE_OPTIONS,
   MAX_LENGTH,
@@ -24,6 +25,7 @@ import {
 } from './producer.constants';
 import {
   asRegistered,
+  EMPTY_FARM,
   type FarmValues,
   hasProducer,
   isAsRegistered,
@@ -37,7 +39,8 @@ type Props = {
   producer: ProducerValues;
   farm: FarmValues;
   newFarm: boolean;
-  onChange: (patch: { producer?: ProducerValues; farm?: FarmValues; newFarm?: boolean }) => void;
+  farmId: number | null;
+  onChange: (patch: { producer?: ProducerValues } & FarmPatch) => void;
 };
 
 const NATIONALITY_OPTIONS = COUNTRIES.map((country) => ({ label: country, value: country }));
@@ -46,9 +49,10 @@ const NATIONALITY_OPTIONS = COUNTRIES.map((country) => ({ label: country, value:
  * The producer step (the web's CensusProducerStep): find the producer by DNI or CUIL among the
  * registered ones, or start a new one from the text searched; then their data and the farm's.
  */
-export function ProducerStep({ producer, farm, newFarm, onChange }: Props) {
+export function ProducerStep({ producer, farm, newFarm, farmId, onChange }: Props) {
   const found = useRegisteredProducer(producer.documentNumber);
   const registered = found !== null;
+  const farms = useProducerFarms(found ? producer.documentNumber : '');
   const set = (patch: Partial<ProducerValues>) => onChange({ producer: { ...producer, ...patch } });
 
   // A registered producer goes with the office's name and nothing else typed: also a new one whose
@@ -60,7 +64,8 @@ export function ProducerStep({ producer, farm, newFarm, onChange }: Props) {
   }, [found, producer, onChange]);
 
   // Another producer is another person: the farm questions start over too.
-  const choose = (next: ProducerValues) => onChange({ producer: next, newFarm: false });
+  const choose = (next: ProducerValues) =>
+    onChange({ producer: next, newFarm: false, farmId: null, farm: EMPTY_FARM });
 
   return (
     <>
@@ -217,6 +222,8 @@ export function ProducerStep({ producer, farm, newFarm, onChange }: Props) {
           <FarmFields
             farm={farm}
             newFarm={newFarm}
+            farmId={farmId}
+            farms={farms}
             // A new producer has no farm yet: this one is their first.
             canBeAnotherFarm={registered}
             onChange={onChange}

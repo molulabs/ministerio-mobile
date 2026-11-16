@@ -19,7 +19,21 @@ const catalogs: Catalogs = {
   localities: [{ id: 155, department: 'DOCTOR_MANUEL_BELGRANO', name: 'San Salvador de Jujuy' }],
   livestockBreeds: [{ id: 1, species: 'CATTLE', name: 'Criolla' }],
   forestSpecies: [{ id: 7, name: 'Algarrobo' }],
-  producers: [{ documentNumber: '22333444', fullName: 'Maria Simulada' }],
+  producers: [
+    {
+      documentNumber: '22333444',
+      fullName: 'Maria Simulada',
+      farms: [
+        {
+          id: 3,
+          number: 1,
+          label: 'Finca 1 · Sin RENSPA',
+          renspa: null,
+          producerLivesOnFarm: true,
+        },
+      ],
+    },
+  ],
 };
 
 /** A fake API that answers each request with the next reply and records If-None-Match. */
@@ -120,10 +134,29 @@ describe('pullCatalogs', () => {
     expect(store.replace).not.toHaveBeenCalled();
   });
 
+  it('takes the producers of an API from before the farms, without farms', async () => {
+    const store = fakeStore(null);
+    const data = {
+      ...catalogs,
+      producers: [{ documentNumber: '22333444', fullName: 'Maria Simulada' }],
+    };
+    const pull = createCatalogsPuller({ http: fakeApi([{ status: 200, data }]).http, store, now });
+
+    await pull();
+
+    expect(store.saved().catalogs?.producers).toEqual([
+      { documentNumber: '22333444', fullName: 'Maria Simulada', farms: [] },
+    ]);
+  });
+
   it.each([
     ['a body that is not an object', 'oops'],
     ['a missing list', { ...catalogs, producers: undefined }],
     ['an item with a wrong field', { ...catalogs, localities: [{ id: '155', name: 'X' }] }],
+    [
+      'a farm with a wrong field',
+      { ...catalogs, producers: [{ ...catalogs.producers[0], farms: [{ id: 3, label: 1 }] }] },
+    ],
   ])('never replaces the catalogs with %s', async (_case, data) => {
     const store = fakeStore('"v1"');
     const pull = createCatalogsPuller({ http: fakeApi([{ status: 200, data }]).http, store, now });

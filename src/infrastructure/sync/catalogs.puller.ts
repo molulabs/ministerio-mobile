@@ -1,11 +1,20 @@
 import type { AxiosInstance } from 'axios';
 
+/** A farm of a registered producer: enough to choose it and fill its RENSPA. */
+export type CatalogFarm = {
+  id: number;
+  number: number;
+  label: string;
+  renspa: string | null;
+  producerLivesOnFarm: boolean | null;
+};
+
 /** The body of GET /api/mobile/catalogs. */
 export type Catalogs = {
   localities: { id: number; department: string; name: string }[];
   livestockBreeds: { id: number; species: string; name: string }[];
   forestSpecies: { id: number; name: string }[];
-  producers: { documentNumber: string; fullName: string }[];
+  producers: { documentNumber: string; fullName: string; farms: CatalogFarm[] }[];
 };
 
 /** Where the catalogs are kept on the phone (SQLite in the app, a fake in tests). */
@@ -90,6 +99,40 @@ export function parseCatalogs(body: unknown): Catalogs {
       name: 'string',
     }),
     forestSpecies: parseList(data, 'forestSpecies', { id: 'number', name: 'string' }),
-    producers: parseList(data, 'producers', { documentNumber: 'string', fullName: 'string' }),
+    producers: parseList<{ documentNumber: string; fullName: string; farms?: unknown }>(
+      data,
+      'producers',
+      { documentNumber: 'string', fullName: 'string' },
+    ).map((producer, position) => ({
+      documentNumber: producer.documentNumber,
+      fullName: producer.fullName,
+      farms: parseFarms(producer.farms, position),
+    })),
   };
+}
+
+const isNullable = (value: unknown, type: Field | 'boolean') =>
+  value === null || typeof value === type;
+
+/** An API from before the farms sends none: the producer is still taken, without farms to choose. */
+function parseFarms(farms: unknown, producer: number): CatalogFarm[] {
+  if (farms === undefined) return [];
+  const where = `producers[${producer}].farms`;
+  if (!Array.isArray(farms)) throw new InvalidCatalogsError(`${where} is not a list`);
+  return farms.map((farm: Record<string, unknown>, position) => {
+    const valid =
+      typeof farm?.id === 'number' &&
+      typeof farm.number === 'number' &&
+      typeof farm.label === 'string' &&
+      isNullable(farm.renspa, 'string') &&
+      isNullable(farm.producerLivesOnFarm, 'boolean');
+    if (!valid) throw new InvalidCatalogsError(`${where}[${position}] is not a farm`);
+    return {
+      id: farm.id as number,
+      number: farm.number as number,
+      label: farm.label as string,
+      renspa: farm.renspa as string | null,
+      producerLivesOnFarm: farm.producerLivesOnFarm as boolean | null,
+    };
+  });
 }

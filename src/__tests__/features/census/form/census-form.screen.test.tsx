@@ -19,6 +19,7 @@ jest.mock('@/src/features/census/census.repository', () => ({
 jest.mock('@/src/features/census/catalogs.queries', () => ({
   searchProducers: async () => [],
   useRegisteredProducer: () => null,
+  useProducerFarms: () => [],
   useLocalities: () => [],
 }));
 jest.mock('@/src/infrastructure/location/currentLocation', () => ({
@@ -97,7 +98,7 @@ describe('CensusFormScreen', () => {
       expect(mockSaveDraft).toHaveBeenLastCalledWith(
         ID,
         7,
-        expect.objectContaining({ formNumber: 'F-99', schemaVersion: 2 }),
+        expect.objectContaining({ formNumber: 'F-99', schemaVersion: 3 }),
         1,
       ),
     );

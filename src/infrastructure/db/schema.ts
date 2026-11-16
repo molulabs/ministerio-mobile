@@ -42,11 +42,29 @@ export const forestSpecies = sqliteTable('forest_species', {
   name: text('name').notNull(),
 });
 
-/** Producers already registered: only enough to warn about a duplicate, not their data. */
+/** Producers already registered: only enough to take one, not their data. */
 export const producerIndex = sqliteTable('producer_index', {
   documentNumber: text('document_number').primaryKey(),
   fullName: text('full_name').notNull(),
 });
+
+/**
+ * The farms of the registered producers: which one is being censused is chosen from these, and
+ * choosing one fills its RENSPA and whether the producer lives on it. Nothing of its address but
+ * the label that tells it from the producer's other farms.
+ */
+export const producerFarms = sqliteTable(
+  'producer_farms',
+  {
+    id: integer('id').primaryKey(),
+    documentNumber: text('document_number').notNull(),
+    number: integer('number').notNull(),
+    label: text('label').notNull(),
+    renspa: text('renspa'),
+    producerLivesOnFarm: integer('producer_lives_on_farm', { mode: 'boolean' }),
+  },
+  (table) => [index('producer_farms_document_number_idx').on(table.documentNumber)],
+);
 
 /*
  * Offline map: the packages installed on the phone, all complete and checked. Only the maps

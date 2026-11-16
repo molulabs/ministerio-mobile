@@ -63,6 +63,8 @@ export const PRODUCER_TEXTS = {
   farm: 'Finca',
   newFarm: 'Es otra finca del productor',
   newFarmHint: 'Marcala si el productor ya tiene una finca censada y esta es otra.',
+  anotherFarm: 'Otra finca',
+  anotherFarmHint: 'Una finca del productor que todavía no está registrada.',
   renspa: 'RENSPA N°',
   livesOnFarm: 'El productor vive en la finca',
 };

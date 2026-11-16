@@ -38,15 +38,17 @@ describe('censusForm.model', () => {
       ...emptyCensusValues(new Date(2026, 10, 13)),
       formNumber: '  F-12 ',
       producer,
+      farmId: 7,
       farm: { renspa: ' 01.234 ', producerLivesOnFarm: true },
     };
 
     expect(toCensusPayload(values)).toEqual({
-      schemaVersion: 2,
+      schemaVersion: 3,
       date: '2026-11-13',
       formNumber: 'F-12',
       observations: null,
       newFarm: false,
+      farmId: 7,
       producer: expect.objectContaining({
         fullName: 'Rosa Ficticia',
         documentType: 'DNI',
@@ -111,6 +113,7 @@ describe('censusForm.model', () => {
       formNumber: '',
       observations: '',
       newFarm: false,
+      farmId: null,
       producer: EMPTY_PRODUCER,
       farm: EMPTY_FARM,
       productionUnit: EMPTY_PRODUCTION_UNIT,
@@ -127,6 +130,14 @@ describe('censusForm.model', () => {
     expect(missingToFinish(values)).toEqual(['date', 'producer']);
 
     expect(missingToFinish({ ...emptyCensusValues(new Date()), producer })).toEqual([]);
+  });
+
+  it('cannot finish without choosing which farm of a producer with farms it is', () => {
+    const values = { ...emptyCensusValues(new Date()), producer };
+    expect(missingToFinish(values, 2)).toEqual(['farm']);
+
+    expect(missingToFinish({ ...values, farmId: 7 }, 2)).toEqual([]);
+    expect(missingToFinish({ ...values, newFarm: true }, 2)).toEqual([]);
   });
 
   it('takes a blank name or document as missing', () => {

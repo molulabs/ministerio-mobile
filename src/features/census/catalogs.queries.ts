@@ -6,6 +6,7 @@ import {
   forestSpecies,
   livestockBreeds,
   localities,
+  producerFarms,
   producerIndex,
 } from '@/src/infrastructure/db/schema';
 
@@ -13,6 +14,14 @@ import {
 const PRODUCER_RESULTS = 30;
 
 export type IndexedProducer = { documentNumber: string; fullName: string };
+/** A farm of a registered producer, from the catalogs. */
+export type ProducerFarm = {
+  id: number;
+  number: number;
+  label: string;
+  renspa: string | null;
+  producerLivesOnFarm: boolean | null;
+};
 export type Locality = { id: number; name: string };
 export type Breed = { id: number; name: string };
 export type ForestSpecies = { id: number; name: string };
@@ -52,6 +61,25 @@ export function useRegisteredProducer(documentNumber: string): IndexedProducer |
     [documentNumber],
   );
   return documentNumber !== '' ? (data[0] ?? null) : null;
+}
+
+/** The farms of the registered producer with this document, by number; none for a new one. */
+export function useProducerFarms(documentNumber: string): ProducerFarm[] {
+  const { data } = useLiveQuery(
+    getDatabase()
+      .select({
+        id: producerFarms.id,
+        number: producerFarms.number,
+        label: producerFarms.label,
+        renspa: producerFarms.renspa,
+        producerLivesOnFarm: producerFarms.producerLivesOnFarm,
+      })
+      .from(producerFarms)
+      .where(eq(producerFarms.documentNumber, documentNumber))
+      .orderBy(asc(producerFarms.number)),
+    [documentNumber],
+  );
+  return documentNumber !== '' ? data : [];
 }
 
 /** The localities of a department, by name; none without a department. */

@@ -21,6 +21,7 @@ import { Screen } from '@/src/shared/ui/Screen';
 import { TextareaField } from '@/src/shared/ui/TextareaField';
 import { TextField } from '@/src/shared/ui/TextField';
 
+import { useProducerFarms } from '../catalogs.queries';
 import { discardDraft, finishDraft, getDraft, saveDraft } from '../census.repository';
 import {
   type CensusFormValues,
@@ -120,6 +121,7 @@ function CensusWizard({ id, userId, initial, onClose }: Props & { initial: Loade
   const [step, setStep] = useState(initial.step);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [missing, setMissing] = useState<ReturnType<typeof missingToFinish>>([]);
+  const producerFarms = useProducerFarms(values.producer.documentNumber);
   const [discarding, setDiscarding] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -157,7 +159,7 @@ function CensusWizard({ id, userId, initial, onClose }: Props & { initial: Loade
   };
 
   const finish = async () => {
-    const lacking = missingToFinish(values);
+    const lacking = missingToFinish(values, producerFarms.length);
     if (lacking.length > 0) {
       setMissing(lacking);
       return;
@@ -237,6 +239,7 @@ function CensusWizard({ id, userId, initial, onClose }: Props & { initial: Loade
                 producer={values.producer}
                 farm={values.farm}
                 newFarm={values.newFarm}
+                farmId={values.farmId}
                 onChange={change}
               />
             </>

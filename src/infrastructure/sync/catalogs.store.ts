@@ -1,7 +1,14 @@
 import { eq } from 'drizzle-orm';
 
 import { getDatabase } from '../db/client';
-import { forestSpecies, livestockBreeds, localities, producerIndex, syncState } from '../db/schema';
+import {
+  forestSpecies,
+  livestockBreeds,
+  localities,
+  producerFarms,
+  producerIndex,
+  syncState,
+} from '../db/schema';
 import type { Catalogs, CatalogsStore } from './catalogs.puller';
 import { getSyncState, setSyncState, type SyncKey, syncKeys } from './syncState';
 
@@ -41,13 +48,22 @@ export const catalogsStore: CatalogsStore = {
       tx.delete(livestockBreeds).run();
       tx.delete(forestSpecies).run();
       tx.delete(producerIndex).run();
+      tx.delete(producerFarms).run();
       for (const rows of chunks(catalogs.localities)) tx.insert(localities).values(rows).run();
       for (const rows of chunks(catalogs.livestockBreeds)) {
         tx.insert(livestockBreeds).values(rows).run();
       }
       for (const rows of chunks(catalogs.forestSpecies))
         tx.insert(forestSpecies).values(rows).run();
-      for (const rows of chunks(catalogs.producers)) tx.insert(producerIndex).values(rows).run();
+      const producers = catalogs.producers.map(({ documentNumber, fullName }) => ({
+        documentNumber,
+        fullName,
+      }));
+      const farms = catalogs.producers.flatMap(({ documentNumber, farms: ofProducer }) =>
+        ofProducer.map((farm) => ({ ...farm, documentNumber })),
+      );
+      for (const rows of chunks(producers)) tx.insert(producerIndex).values(rows).run();
+      for (const rows of chunks(farms)) tx.insert(producerFarms).values(rows).run();
 
       if (etag) {
         saveState(syncKeys.catalogsEtag, etag);

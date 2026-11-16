@@ -60,6 +60,7 @@ jest.mock('@maplibre/maplibre-react-native', () => ({}));
 jest.mock('@/src/features/census/catalogs.queries', () => ({
   searchProducers: async () => [],
   useRegisteredProducer: () => null,
+  useProducerFarms: () => [],
   useLocalities: () => [],
 }));
 jest.mock('@/src/features/maps/useOfflineMap', () => ({
