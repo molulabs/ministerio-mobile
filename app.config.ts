@@ -15,7 +15,7 @@ if (!apiUrl) {
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: 'Censo',
+  name: 'Censo productores',
   slug: 'censo-scad-jujuy',
   version: '0.2.0',
   orientation: 'portrait',
@@ -23,7 +23,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   userInterfaceStyle: 'light',
   android: {
     package: 'com.molulabs.censo',
-    // The brand mark of the web (app/public/favicon.svg): CP on the accent of the "senal" theme.
+    // The brand mark: the J of the Jujuy logo (assets/logo-jujuy.png), white on the accent of "senal".
     adaptiveIcon: {
       backgroundColor: '#0E7282',
       foregroundImage: './assets/android-icon-foreground.png',
@@ -38,11 +38,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     ['expo-build-properties', { android: { minSdkVersion: 24 } }],
     'expo-secure-store',
-    // The Jujuy logo, as on the web login. Android 12+ shows it inside a circle: the image keeps
-    // the logo within it.
+    // The Jujuy logo of the login. The plugin fits the image in an imageWidth dp square, centred
+    // on Android 12+'s 288 dp splash icon, which only shows a ~192 dp circle: 112 dp keeps the
+    // whole logo inside it (wider, Android cuts its J and its y).
     [
       'expo-splash-screen',
-      { image: './assets/splash-icon.png', imageWidth: 220, backgroundColor: '#ffffff' },
+      { image: './assets/logo-jujuy.png', imageWidth: 112, backgroundColor: '#ffffff' },
     ],
     'react-native-quick-crypto',
     // The local database holds producers' personal data: encrypted with SQLCipher.

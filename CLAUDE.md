@@ -82,7 +82,7 @@ Offline-first Android app (iOS later) for the livestock/producer census of the M
 
 - `@molulabs/ds` (GitHub tag in `package.json`), theme `senal`, as the ministry's web. Its components are native but typed with web props: `onClick` is `onPress`, and `src/shared/ui/` (`Screen`, `Text`, `TextField`) adapts what screens need.
 - Toasts: `useToasts().push(tone, title, message)`. They are drawn above the tab bar: `AppTabBar` measures itself into `tabBarHeight.ts`.
-- Branding: the "CP" mark on the accent of `senal` (`#0E7282`) for the launcher icon, the Jujuy logo on the splash and the login.
+- Branding: the app is called "Censo productores". Its launcher icon is the "J" of the Jujuy logo (`logo-jujuy.png`), white, on the accent of `senal` (`#0E7282`), in `icon.png`, the adaptive icon layers, `favicon.png` and `store/play-icon-512.png` (57% of the height in `icon.png`, `favicon.png` and the Play icon; 45% in the adaptive layers, inside Android's 66 dp safe circle); the Jujuy logo (`logo-jujuy.png`) is on the login and, the same file, on the splash (`imageWidth: 112`, see `app.config.ts`). The web's favicon (`app/public/favicon.svg`) still shows "CP".
 
 ## Platform targets
 
