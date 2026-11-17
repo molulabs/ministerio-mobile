@@ -1,0 +1,44 @@
+# Checks every push to main and every pull request: types, lint, format, tests and known vulnerabilities.
+# The native build stays on EAS (eas build); OTA updates are published by hand (pnpm update:preview).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A new push to the same branch cancels the run that is no longer useful
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # Takes the pnpm version from "packageManager" in package.json
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm typecheck
+
+      # expo lint reads .env (committed) for API_URL, which app.config.ts requires
+      - run: pnpm lint
+
+      - run: pnpm format:check
+
+      - run: pnpm test --ci
+
+      # Known vulnerabilities in the dependencies used in production
+      - run: pnpm audit --prod
