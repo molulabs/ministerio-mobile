@@ -3,3 +3,7 @@ ignoredBuiltDependencies:
   # install scripts are not needed
   - '@parcel/watcher'
   - esbuild
+
+overrides:
+  # GHSA-g3hv-75wg-m249 (expo's @expo/fingerprint, build time only): fixed only in minimatch 11, same API
+  minimatch@>=7.0.0 <11.0.1: ^11.0.1
