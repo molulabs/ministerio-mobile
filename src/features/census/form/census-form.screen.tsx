@@ -19,7 +19,6 @@ import type { CensusFieldError } from '@/src/infrastructure/db/schema';
 import { texts } from '@/src/shared/constants/texts';
 import { Screen } from '@/src/shared/ui/Screen';
 import { TextareaField } from '@/src/shared/ui/TextareaField';
-import { TextField } from '@/src/shared/ui/TextField';
 
 import { useProducerFarms } from '../catalogs.queries';
 import { discardDraft, finishDraft, getDraft, saveDraft } from '../census.repository';
@@ -230,11 +229,6 @@ function CensusWizard({ id, userId, initial, onClose }: Props & { initial: Loade
               <Field label={form.date} required>
                 <DateInput value={values.date} onChange={(date: string) => change({ date })} />
               </Field>
-              <TextField
-                label={form.formNumber}
-                value={values.formNumber}
-                onChangeText={(formNumber) => change({ formNumber })}
-              />
               <ProducerStep
                 producer={values.producer}
                 farm={values.farm}

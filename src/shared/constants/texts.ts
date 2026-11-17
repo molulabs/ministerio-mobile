@@ -88,7 +88,6 @@ export const texts = {
     form: {
       title: 'Censo',
       date: 'Fecha',
-      formNumber: 'N° de formulario',
       observations: 'Observaciones',
       finish: 'Terminar censo',
       missingTitle: 'Falta completar',

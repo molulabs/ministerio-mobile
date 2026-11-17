@@ -7,7 +7,7 @@ Offline-first Android app (iOS later) for the livestock/producer census of the M
 - Plan: https://claude.ai/artifact/7Wky6z823sxr2X6eubfEPH — read it before starting a new phase.
 - Sibling repos in `../`: `api/` (Symfony, JWT via `/api/login` + `/api/refresh`), `app/` (web, React + Formik/Yup), `infra/` (Docker Compose + nginx).
 - Mobile API lives under `/api/mobile/` (`GET catalogs` with ETag, idempotent `PUT census-submissions/{uuid}`).
-- A census is of one farm of its producer, and the API decides which one when it accepts the submission (`schemaVersion` 2). It never asks the phone. The farm data (RENSPA, coordinates, whether the producer lives there) goes in `productionUnit`. The census form needs an "Es otra finca del productor" checkbox, sent as `newFarm: true`. Whatever the API cannot tell apart is flagged for review on the web. A 409 is never retried: the census stays as `anomaly` on the phone (see Census outbox). Rules: `../api/CLAUDE.md` → Farms.
+- A census is of one farm of its producer, chosen on the phone (`farmId`) or decided by the API when it accepts the submission. It never asks the phone back. The payload is `schemaVersion` 4: it has no form number, because the census taker loads the census on the phone and there is no paper form (decided 2026-11-17; the API reads only that version, and no longer answers 202). The farm data (RENSPA, coordinates, whether the producer lives there) goes in `productionUnit`. The census form needs an "Es otra finca del productor" checkbox, sent as `newFarm: true`. Whatever the API cannot tell apart is flagged for review on the web. A 409 is never retried: the census stays as `anomaly` on the phone (see Census outbox). Rules: `../api/CLAUDE.md` → Farms.
 
 ## Core rules (from the plan)
 
@@ -62,7 +62,7 @@ Offline-first Android app (iOS later) for the livestock/producer census of the M
 ## Census outbox
 
 - `infrastructure/sync/outbox.sender.ts` sends the `ready` censuses of the signed-in user with an online session, oldest first, one at a time: `PUT /api/mobile/census-submissions/{id}`, 30 s timeout. Each census goes only with its own user's token; an offline session sends nothing.
-- Answers: 201 → `sent`; 202 → `in_review` (`conflict` says what the office must check); 422 → `needs_fix` (`errors`, one per field); 409 → `anomaly`, **never retried** (the API has another census under that id, or refused it for a clash); 401 stops the run without counting an attempt; any other 4xx waits and the run goes on; no signal or 5xx waits and the run stops. Waiting is a backoff of 1, 2, 4… minutes, up to 30.
+- Answers: 201 → `sent`; 202 → `in_review` (the API no longer sends it since schema 4, kept for censuses already marked so); 422 → `needs_fix` (`errors`, one per field); 409 → `anomaly`, **never retried** (the API has another census under that id, or refused it for a clash); 401 stops the run without counting an attempt; any other 4xx waits and the run goes on; no signal or 5xx waits and the run stops. Waiting is a backoff of 1, 2, 4… minutes, up to 30.
 - A sent payload never changes: the API answers a repeated PUT only when the body is the same, and 409 otherwise.
 - `outbox.store.ts` only changes rows still `ready`, so a late answer never overwrites an earlier one.
 - `sendNow` has its own serial queue, so the "Enviar censos" button does not wait for a map download. `src/app/sync.ts` exports `sendCensusesNow()` (forced: it ignores the backoff).

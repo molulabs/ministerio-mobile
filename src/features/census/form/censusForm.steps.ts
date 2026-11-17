@@ -21,7 +21,7 @@ const ASKED_WITH_THE_PRODUCER = ['productionUnit.renspa', 'productionUnit.produc
 
 /**
  * The step where a field the API rejected (422, "livestock.hasCattle") is fixed. The header (date,
- * form number, "otra finca") is asked with the producer; the observations, on the summary.
+ * "otra finca") is asked with the producer; the observations, on the summary.
  */
 export function stepOfField(field: string): number {
   if (ASKED_WITH_THE_PRODUCER.some((path) => field === path || field.startsWith(`${path}.`))) {

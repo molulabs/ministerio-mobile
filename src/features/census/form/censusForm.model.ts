@@ -46,8 +46,11 @@ import {
   toProductionUnitPayload,
 } from './steps/productionUnit/productionUnit.helper';
 
-/** The payload version the API reads (CensusSubmissionService::SCHEMA_VERSION). */
-export const SCHEMA_VERSION = 3;
+/**
+ * The payload version the API reads (CensusSubmissionService::SCHEMA_VERSION). 4 has no form number:
+ * the census taker loads the census here, there is no paper form.
+ */
+export const SCHEMA_VERSION = 4;
 
 /** The parts of the payload each step fills, shaped like the request the web saves that step with. */
 export const CENSUS_SECTIONS = [
@@ -69,7 +72,6 @@ export type CensusPayload = {
   schemaVersion: number;
   /** YYYY-MM-DD. */
   date: string | null;
-  formNumber: string | null;
   observations: string | null;
   /** "Otra finca": a farm of the producer not censused yet, so the API gives the census a new one. */
   newFarm: boolean;
@@ -80,7 +82,6 @@ export type CensusPayload = {
 /** What the wizard edits: each step keeps its values as typed, and its helper turns them into its section. */
 export type CensusFormValues = {
   date: string;
-  formNumber: string;
   observations: string;
   newFarm: boolean;
   farmId: number | null;
@@ -105,7 +106,6 @@ export function localIsoDate(now: Date): string {
 export function emptyCensusValues(now: Date): CensusFormValues {
   return {
     date: localIsoDate(now),
-    formNumber: '',
     observations: '',
     newFarm: false,
     farmId: null,
@@ -126,7 +126,6 @@ export function toCensusPayload(values: CensusFormValues): CensusPayload {
   return {
     schemaVersion: SCHEMA_VERSION,
     date: values.date === '' ? null : values.date,
-    formNumber: textOrNull(values.formNumber),
     observations: textOrNull(values.observations),
     newFarm: values.newFarm,
     farmId: values.farmId,
@@ -158,8 +157,8 @@ const stringOr = (value: unknown, fallback: string) =>
 export function fromCensusPayload(payload: Record<string, unknown>): CensusFormValues {
   const productionUnit = sectionOf(payload, 'productionUnit');
   return {
+    // A draft of an older version may have a form number: it is left out
     date: stringOr(payload.date, ''),
-    formNumber: stringOr(payload.formNumber, ''),
     observations: stringOr(payload.observations, ''),
     newFarm: payload.newFarm === true,
     farmId: typeof payload.farmId === 'number' ? payload.farmId : null,

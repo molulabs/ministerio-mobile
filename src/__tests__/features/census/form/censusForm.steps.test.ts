@@ -33,7 +33,7 @@ describe('censusForm.steps', () => {
 
   it('sends the header and anything unknown to the first step', () => {
     expect(stepOfField('date')).toBe(0);
-    expect(stepOfField('formNumber')).toBe(0);
+    expect(stepOfField('newFarm')).toBe(0);
     expect(stepOfField('schemaVersion')).toBe(0);
   });
 

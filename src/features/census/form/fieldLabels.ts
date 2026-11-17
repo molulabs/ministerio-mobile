@@ -51,7 +51,6 @@ const pick = <K extends string>(source: Record<K, string>, keys: K[]): Labels =>
 
 const HEADER: Labels = {
   date: texts.census.form.date,
-  formNumber: texts.census.form.formNumber,
   observations: texts.census.form.observations,
   newFarm: PRODUCER_TEXTS.newFarm,
 };

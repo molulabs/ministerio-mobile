@@ -36,16 +36,14 @@ describe('censusForm.model', () => {
   it('builds the body of the PUT, with every section and the schema version', () => {
     const values = {
       ...emptyCensusValues(new Date(2026, 10, 13)),
-      formNumber: '  F-12 ',
       producer,
       farmId: 7,
       farm: { renspa: ' 01.234 ', producerLivesOnFarm: true },
     };
 
     expect(toCensusPayload(values)).toEqual({
-      schemaVersion: 3,
+      schemaVersion: 4,
       date: '2026-11-13',
-      formNumber: 'F-12',
       observations: null,
       newFarm: false,
       farmId: 7,
@@ -110,7 +108,6 @@ describe('censusForm.model', () => {
   it('starts empty whatever a draft lacks', () => {
     expect(fromCensusPayload({ producer: 'no es un objeto' })).toEqual({
       date: '',
-      formNumber: '',
       observations: '',
       newFarm: false,
       farmId: null,

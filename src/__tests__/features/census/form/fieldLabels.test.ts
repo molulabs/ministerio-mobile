@@ -25,7 +25,7 @@ describe('labelOfField', () => {
     expect(labelOfField('infrastructure.otherVehiclesDetail', payload)).toBe(
       'Detalle de "otros" (vehículos)',
     );
-    expect(labelOfField('formNumber', payload)).toBe('N° de formulario');
+    expect(labelOfField('observations', payload)).toBe('Observaciones');
   });
 
   it('names the livestock counts with their species, and the breeds by species', () => {

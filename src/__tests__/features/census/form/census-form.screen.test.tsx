@@ -38,7 +38,6 @@ const draft = (
   payload: {
     schemaVersion: 2,
     date: '2026-11-13',
-    formNumber: null,
     observations: null,
     ...payload,
   },
@@ -72,12 +71,14 @@ describe('CensusFormScreen', () => {
     expect(mockGetDraft).toHaveBeenCalledWith(ID, 7);
   });
 
-  it('starts with the date and the form number of the census', async () => {
+  it('starts with the date of the census, and asks no form number: there is no paper form', async () => {
+    // A draft of an older version may have one: it is left out
     mockGetDraft.mockResolvedValue(draft({ formNumber: 'F-12' }));
     await renderForm();
 
     expect(await screen.findByDisplayValue('13/11/2026')).toBeOnTheScreen();
-    expect(screen.getByDisplayValue('F-12')).toBeOnTheScreen();
+    expect(screen.queryByLabelText('N° de formulario')).toBeNull();
+    expect(screen.queryByDisplayValue('F-12')).toBeNull();
   });
 
   it('says so when the census is no longer a draft', async () => {
@@ -91,17 +92,21 @@ describe('CensusFormScreen', () => {
     mockGetDraft.mockResolvedValue(draft());
     await renderForm();
 
-    await fireEvent.changeText(await screen.findByLabelText('N° de formulario'), 'F-99');
+    await fireEvent.changeText(await screen.findByDisplayValue('13/11/2026'), '14/11/2026');
     await fireEvent.press(screen.getByRole('button', { name: 'Siguiente' }));
 
     await waitFor(() =>
       expect(mockSaveDraft).toHaveBeenLastCalledWith(
         ID,
         7,
-        expect.objectContaining({ formNumber: 'F-99', schemaVersion: 3 }),
+        expect.objectContaining({
+          schemaVersion: 4,
+          date: '2026-11-14',
+        }),
         1,
       ),
     );
+    expect(mockSaveDraft.mock.lastCall?.[2]).not.toHaveProperty('formNumber');
     expect(screen.getByText('Familia y finanzas')).toBeOnTheScreen();
   });
 
