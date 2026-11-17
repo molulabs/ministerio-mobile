@@ -104,6 +104,7 @@ Change minSdk only in `app.config.ts`, never in `android/`. The ministry's field
 ## Tests
 
 - Jest with the `jest-expo` preset and React Native Testing Library. Tests live in `src/__tests__/`, mirroring the path of the code they test (`src/__tests__/infrastructure/api/authRefresh.test.ts`).
+- `testTimeout` is 15 s (package.json `jest`): on GitHub's runners the first test of a heavy screen (ProducerStep, with the design system's Autocomplete) took over Jest's default 5 s while the module graph loaded; locally it takes about a second. The timeout only catches hangs.
 - RNTL v14: `render`, `fireEvent` and `act` are async — always `await` them.
 - Find elements as a user would: `getByLabelText`, `getByRole('button', { name })`, `getByText`. Give inputs an `accessibilityLabel` and pressables `accessibilityRole="button"`.
 - HTTP: give a fresh axios instance a fake `adapter` (see `authRefresh.test.ts`) instead of adding a mocking library.
