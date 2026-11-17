@@ -8,8 +8,11 @@ export type AppVersion = {
   update: { id: string; createdAt: Date | null } | null;
 };
 
-/** The first characters of an update id: enough to tell updates apart on the screen. */
-const SHORT_ID = 7;
+/**
+ * The last characters of an update id: they are random. The first ones are the time it was
+ * published (UUID v7), the same for two updates of the same day.
+ */
+const SHORT_ID = 6;
 
 export function appVersion(): AppVersion {
   const version = Constants.expoConfig?.version ?? '?';
@@ -18,6 +21,6 @@ export function appVersion(): AppVersion {
   }
   return {
     version,
-    update: { id: Updates.updateId.slice(0, SHORT_ID), createdAt: Updates.createdAt },
+    update: { id: Updates.updateId.slice(-SHORT_ID), createdAt: Updates.createdAt },
   };
 }

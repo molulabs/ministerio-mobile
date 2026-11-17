@@ -42,7 +42,7 @@ describe('appVersion', () => {
     const createdAt = new Date('2026-11-17T13:30:00Z');
     Object.assign(mockUpdates, { isEmbeddedLaunch: false, createdAt });
 
-    expect(appVersion()).toEqual({ version: '0.4.0', update: { id: 'e7a1c3f', createdAt } });
+    expect(appVersion()).toEqual({ version: '0.4.0', update: { id: '556666', createdAt } });
   });
 
   it('has no update in development, where expo-updates is off', () => {

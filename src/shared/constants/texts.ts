@@ -1,4 +1,8 @@
 /** User-facing texts. The app is only in Spanish, so there is no i18n layer. */
+/** 21:05, the same on every phone: the locale's time format may be 12 hours ("9:05 p. m."). */
+const hoursAndMinutes = (date: Date) =>
+  `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+
 export const texts = {
   login: {
     title: 'Censo de productores',
@@ -184,6 +188,8 @@ export const texts = {
       update === null
         ? `${version} · sin actualizaciones`
         : `${version} · actualización ${update.id}` +
-          (update.createdAt ? ` del ${update.createdAt.toLocaleDateString('es-AR')}` : ''),
+          (update.createdAt
+            ? ` del ${update.createdAt.toLocaleDateString('es-AR')} ${hoursAndMinutes(update.createdAt)}`
+            : ''),
   },
 } as const;
