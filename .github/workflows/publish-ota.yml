@@ -1,0 +1,67 @@
+# Publishes main as an OTA update to the field phones (channel "preview"), by hand: Actions → Publish OTA →
+# Run workflow, with the message. It runs the checks of CI, stops if the native side changed since the
+# APK (that needs a new version and APK, not an update) and says what the profile of a phone will show.
+# Needs the secret EXPO_TOKEN (an expo.dev access token of molulabss-team).
+name: Publish OTA
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: What the update brings (e.g. "No cortar la palabra Versión en el perfil")
+        required: true
+        type: string
+
+# One publish at a time, and a running one is never cancelled halfway
+concurrency:
+  group: publish-ota
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    # Only main: what reaches the phones is what passed review
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      # The production API: the update carries the app config, and .env has the development one
+      API_URL: https://censo.scadjujuy.gob.ar
+    steps:
+      - uses: actions/checkout@v5
+
+      # Takes the pnpm version from "packageManager" in package.json
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm typecheck
+
+      - run: pnpm lint
+
+      - run: pnpm format:check
+
+      - run: pnpm test --ci
+
+      # EAS CLI, signed in with the token
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - run: scripts/check-native-fingerprint.sh
+
+      # Android only: there is no iOS build. The message goes through env, never into the script.
+      - name: Publish the update
+        env:
+          MESSAGE: ${{ inputs.message }}
+        run: |
+          eas update --channel preview --environment preview --platform android \
+            --message "$MESSAGE" --non-interactive --json > update.json
+          node scripts/ota-summary.mjs update.json >> "$GITHUB_STEP_SUMMARY"
