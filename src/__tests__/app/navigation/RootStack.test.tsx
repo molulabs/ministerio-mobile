@@ -138,6 +138,8 @@ describe('RootStack', () => {
 
     await fireEvent.press(screen.getByRole('tab', { name: 'Perfil' }));
     expect(screen.getByText('Hola, Rosa')).toBeOnTheScreen();
+    // The development build runs no OTA update
+    expect(screen.getByText(/· sin actualizaciones$/)).toBeOnTheScreen();
   });
 
   it('sends the censuses from the census tab and says what happened', async () => {

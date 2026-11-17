@@ -1,6 +1,7 @@
 import { AlertBanner, Button, Card, Dialog, KeyValueList } from '@molulabs/ds';
 import { useState } from 'react';
 
+import type { AppVersion } from '@/src/infrastructure/updates/appVersion';
 import { texts } from '@/src/shared/constants/texts';
 import { Screen } from '@/src/shared/ui/Screen';
 import { Text } from '@/src/shared/ui/Text';
@@ -15,6 +16,8 @@ interface ProfileScreenProps {
   lastSyncAt: number | null;
   /** The user's censuses that have not gone out: signing out asks first when there are any. */
   unsentCount: number;
+  /** What the phone runs: the APK's version and the OTA update, if any. */
+  appVersion: AppVersion;
   onSignOut: () => Promise<void>;
 }
 
@@ -26,6 +29,7 @@ export function ProfileScreen({
   offline,
   lastSyncAt,
   unsentCount,
+  appVersion,
   onSignOut,
 }: ProfileScreenProps) {
   const [signingOut, setSigningOut] = useState(false);
@@ -51,6 +55,10 @@ export function ProfileScreen({
             { k: texts.profile.name, v: `${firstname} ${lastname}` },
             { k: texts.profile.email, v: email },
             { k: texts.profile.lastSync, v: texts.profile.lastSyncValue(lastSyncAt) },
+            {
+              k: texts.profile.version,
+              v: texts.profile.versionValue(appVersion.version, appVersion.update),
+            },
           ]}
         />
       </Card>

@@ -178,5 +178,12 @@ export const texts = {
     lastSync: 'Datos actualizados',
     lastSyncValue: (time: number | null) =>
       time === null ? 'Nunca' : new Date(time).toLocaleString('es-AR'),
+    // The APK's version and the OTA update running on top of it, to tell which code a phone has.
+    version: 'Versión',
+    versionValue: (version: string, update: { id: string; createdAt: Date | null } | null) =>
+      update === null
+        ? `${version} · sin actualizaciones`
+        : `${version} · actualización ${update.id}` +
+          (update.createdAt ? ` del ${update.createdAt.toLocaleDateString('es-AR')}` : ''),
   },
 } as const;

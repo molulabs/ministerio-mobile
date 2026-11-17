@@ -16,6 +16,7 @@ import { testCensusPayload } from '@/src/features/census/testCensus';
 import { MapScreen } from '@/src/features/maps/screens/map.screen';
 import { ProfileScreen } from '@/src/features/profile/screens/profile.screen';
 import { syncKeys, useSyncState } from '@/src/infrastructure/sync/syncState';
+import { appVersion } from '@/src/infrastructure/updates/appVersion';
 import { texts } from '@/src/shared/constants/texts';
 
 import { sendCensusesNow } from '../sync';
@@ -79,6 +80,7 @@ function UserProfile({ user }: { user: SessionUser }) {
       offline={mode === 'offline'}
       lastSyncAt={lastSyncAt === null ? null : Number(lastSyncAt)}
       unsentCount={unsentCount}
+      appVersion={appVersion()}
       onSignOut={signOut}
     />
   );
