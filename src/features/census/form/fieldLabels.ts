@@ -41,6 +41,7 @@ type Labels = Record<string, string>;
 
 const PLACE: Labels = {
   department: FIELD_TEXTS.department,
+  municipalityId: FIELD_TEXTS.municipality,
   localityId: FIELD_TEXTS.locality,
   latitude: FIELD_TEXTS.latitude,
   longitude: FIELD_TEXTS.longitude,

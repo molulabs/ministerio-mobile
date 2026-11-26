@@ -3,6 +3,7 @@ import {
   type LocalityRef,
   textOrNull,
   toCatalogRef,
+  toId,
   toNumber,
 } from '../../fields/fields.helper';
 
@@ -15,6 +16,8 @@ export type ProductionUnitValues = {
   /** The house number, or the km of a route. */
   number: string;
   department: string;
+  /** One of the catalog's, by its id. */
+  municipality: number | null;
   locality: LocalityRef;
   paraje: string;
   latitude: string;
@@ -35,6 +38,7 @@ export const EMPTY_PRODUCTION_UNIT: ProductionUnitValues = {
   street: '',
   number: '',
   department: '',
+  municipality: null,
   locality: null,
   paraje: '',
   latitude: '',
@@ -67,6 +71,7 @@ export function toProductionUnitPayload(values: ProductionUnitValues): Record<st
     street: textOrNull(values.street),
     number: textOrNull(values.number),
     department: textOrNull(values.department),
+    municipalityId: values.municipality,
     localityId: values.locality,
     paraje: textOrNull(values.paraje),
     latitude: toNumber(values.latitude),
@@ -92,6 +97,7 @@ export function fromProductionUnitPayload(section: Record<string, unknown>): Pro
     street: asText(section.street),
     number: asText(section.number),
     department: asText(section.department),
+    municipality: toId(section.municipalityId),
     locality: toCatalogRef(section.localityId),
     paraje: asText(section.paraje),
     latitude: asText(section.latitude),

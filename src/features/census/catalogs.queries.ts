@@ -6,6 +6,7 @@ import {
   forestSpecies,
   livestockBreeds,
   localities,
+  municipalities,
   producerFarms,
   producerIndex,
 } from '@/src/infrastructure/db/schema';
@@ -22,7 +23,9 @@ export type ProducerFarm = {
   renspa: string | null;
   producerLivesOnFarm: boolean | null;
 };
-export type Locality = { id: number; name: string };
+/** municipalityId is null while the catalog does not say which municipality it is in. */
+export type Locality = { id: number; name: string; municipalityId: number | null };
+export type Municipality = { id: number; name: string };
 export type Breed = { id: number; name: string };
 export type ForestSpecies = { id: number; name: string };
 
@@ -82,11 +85,28 @@ export function useProducerFarms(documentNumber: string): ProducerFarm[] {
   return documentNumber !== '' ? data : [];
 }
 
+/** The municipalities of a department, by name; none without a department. */
+export function useMunicipalities(department: string): Municipality[] {
+  const { data } = useLiveQuery(
+    getDatabase()
+      .select({ id: municipalities.id, name: municipalities.name })
+      .from(municipalities)
+      .where(eq(municipalities.department, department))
+      .orderBy(asc(municipalities.name)),
+    [department],
+  );
+  return department === '' ? [] : data;
+}
+
 /** The localities of a department, by name; none without a department. */
 export function useLocalities(department: string): Locality[] {
   const { data } = useLiveQuery(
     getDatabase()
-      .select({ id: localities.id, name: localities.name })
+      .select({
+        id: localities.id,
+        name: localities.name,
+        municipalityId: localities.municipalityId,
+      })
       .from(localities)
       .where(eq(localities.department, department))
       .orderBy(asc(localities.name)),

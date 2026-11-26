@@ -5,6 +5,7 @@ import {
   forestSpecies,
   livestockBreeds,
   localities,
+  municipalities,
   producerFarms,
   producerIndex,
   syncState,
@@ -44,11 +45,15 @@ export const catalogsStore: CatalogsStore = {
           .onConflictDoUpdate({ target: syncState.key, set: { value, updatedAt } })
           .run();
 
+      tx.delete(municipalities).run();
       tx.delete(localities).run();
       tx.delete(livestockBreeds).run();
       tx.delete(forestSpecies).run();
       tx.delete(producerIndex).run();
       tx.delete(producerFarms).run();
+      for (const rows of chunks(catalogs.municipalities)) {
+        tx.insert(municipalities).values(rows).run();
+      }
       for (const rows of chunks(catalogs.localities)) tx.insert(localities).values(rows).run();
       for (const rows of chunks(catalogs.livestockBreeds)) {
         tx.insert(livestockBreeds).values(rows).run();

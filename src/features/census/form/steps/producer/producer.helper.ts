@@ -6,6 +6,7 @@ import {
   type LocalityRef,
   textOrNull,
   toCatalogRef,
+  toId,
   toNumber as toCoordinate,
 } from '../../fields/fields.helper';
 import { CUIL_DIGITS } from './producer.constants';
@@ -24,6 +25,8 @@ export type ProducerValues = {
   street: string;
   number: string;
   department: string;
+  /** One of the catalog's, by its id. */
+  municipality: number | null;
   locality: LocalityRef;
   postalCode: string;
   paraje: string;
@@ -52,6 +55,7 @@ export const EMPTY_PRODUCER: ProducerValues = {
   street: '',
   number: '',
   department: '',
+  municipality: null,
   locality: null,
   postalCode: '',
   paraje: '',
@@ -75,6 +79,7 @@ const KEPT_BY_THE_OFFICE = [
   'street',
   'number',
   'department',
+  'municipality',
   'locality',
   'postalCode',
   'paraje',
@@ -155,6 +160,7 @@ export function toProducerPayload(values: ProducerValues): Record<string, unknow
     street: textOrNull(values.street),
     number: textOrNull(values.number),
     department: textOrNull(values.department),
+    municipalityId: values.municipality,
     localityId: values.locality,
     postalCode: textOrNull(values.postalCode),
     paraje: textOrNull(values.paraje),
@@ -180,6 +186,7 @@ export function fromProducerPayload(section: Record<string, unknown>): ProducerV
     street: text(section.street),
     number: text(section.number),
     department: text(section.department),
+    municipality: toId(section.municipalityId),
     locality: toCatalogRef(section.localityId),
     postalCode: text(section.postalCode),
     paraje: text(section.paraje),

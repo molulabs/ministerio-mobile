@@ -14,8 +14,7 @@ import {
   useRegisteredProducer,
 } from '../../../catalogs.queries';
 import { CoordinatesFields } from '../../fields/CoordinatesFields';
-import { DEPARTMENT_OPTIONS, FIELD_TEXTS } from '../../fields/fields.constants';
-import { LocalityField } from '../../fields/LocalityField';
+import { PlaceFields } from '../../fields/PlaceFields';
 import { FarmFields, type FarmPatch } from './FarmFields';
 import {
   DOCUMENT_TYPE_OPTIONS,
@@ -168,18 +167,13 @@ export function ProducerStep({ producer, farm, newFarm, farmId, onChange }: Prop
                 onChangeText={(number) => set({ number })}
                 maxLength={MAX_LENGTH.number}
               />
-              <SelectField
-                label={FIELD_TEXTS.department}
-                value={producer.department}
-                // The locality belongs to the department, so a new one starts it over.
-                onChange={(department) => set({ department, locality: null })}
-                options={DEPARTMENT_OPTIONS}
-                placeholder={FIELD_TEXTS.departmentPlaceholder}
-              />
-              <LocalityField
-                department={producer.department}
-                value={producer.locality}
-                onChange={(locality) => set({ locality })}
+              <PlaceFields
+                value={{
+                  department: producer.department,
+                  municipality: producer.municipality,
+                  locality: producer.locality,
+                }}
+                onChange={set}
               />
               <TextField
                 label={T.postalCode}

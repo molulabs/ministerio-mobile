@@ -11,7 +11,9 @@ export type CatalogFarm = {
 
 /** The body of GET /api/mobile/catalogs. */
 export type Catalogs = {
-  localities: { id: number; department: string; name: string }[];
+  municipalities: { id: number; department: string; name: string }[];
+  /** municipalityId is null while the catalog does not say which municipality it is in. */
+  localities: { id: number; department: string; name: string; municipalityId: number | null }[];
   livestockBreeds: { id: number; species: string; name: string }[];
   forestSpecies: { id: number; name: string }[];
   producers: { documentNumber: string; fullName: string; farms: CatalogFarm[] }[];
@@ -88,11 +90,24 @@ export function parseCatalogs(body: unknown): Catalogs {
   if (typeof body !== 'object' || body === null) throw new InvalidCatalogsError('not an object');
   const data = body as Record<string, unknown>;
   return {
-    localities: parseList(data, 'localities', {
-      id: 'number',
-      department: 'string',
-      name: 'string',
-    }),
+    // An API from before the municipalities sends none: the localities come without them.
+    municipalities:
+      data.municipalities === undefined
+        ? []
+        : parseList(data, 'municipalities', { id: 'number', department: 'string', name: 'string' }),
+    localities: parseList<{
+      id: number;
+      department: string;
+      name: string;
+      municipalityId?: unknown;
+    }>(data, 'localities', { id: 'number', department: 'string', name: 'string' }).map(
+      ({ id, department, name, municipalityId }, position) => {
+        if (municipalityId !== undefined && !isNullable(municipalityId, 'number')) {
+          throw new InvalidCatalogsError(`localities[${position}].municipalityId is not a number`);
+        }
+        return { id, department, name, municipalityId: (municipalityId ?? null) as number | null };
+      },
+    ),
     livestockBreeds: parseList(data, 'livestockBreeds', {
       id: 'number',
       species: 'string',

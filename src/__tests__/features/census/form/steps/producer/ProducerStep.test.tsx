@@ -40,8 +40,20 @@ jest.mock('@/src/features/census/catalogs.queries', () => ({
   searchProducers: (text: string) => mockSearchProducers(text),
   useRegisteredProducer: (documentNumber: string) => mockRegistered.get(documentNumber) ?? null,
   useProducerFarms: (documentNumber: string) => mockFarms.get(documentNumber) ?? [],
+  useMunicipalities: (department: string) =>
+    department === 'TILCARA'
+      ? [
+          { id: 1, name: 'Comisión Huacalera' },
+          { id: 2, name: 'Municipio Maimará' },
+        ]
+      : [],
   useLocalities: (department: string) =>
-    department === 'TILCARA' ? [{ id: 4, name: 'Maimará' }] : [],
+    department === 'TILCARA'
+      ? [
+          { id: 4, name: 'Maimará', municipalityId: 2 },
+          { id: 5, name: 'Huacalera', municipalityId: 1 },
+        ]
+      : [],
 }));
 const mockCurrentLocation = jest.fn();
 const mockRequestPermission = jest.fn();
@@ -289,18 +301,62 @@ describe('ProducerStep', () => {
     await fireEvent.press(screen.getByLabelText('Localidad'));
     await fireEvent.press(await screen.findByText('Maimará'));
 
-    expect(latest.current.producer).toMatchObject({ department: 'TILCARA', locality: 4 });
+    // The locality brings its municipality
+    expect(latest.current.producer).toMatchObject({
+      department: 'TILCARA',
+      municipality: 2,
+      locality: 4,
+    });
   });
 
-  it('adds a locality the phone does not have by its name', async () => {
-    const latest = await renderStep({ producer: { ...juan, department: 'TILCARA' } });
+  it('offers only the localities of the municipality chosen', async () => {
+    await renderStep({ producer: { ...juan, department: 'TILCARA', municipality: 1 } });
+
+    await fireEvent.press(screen.getByLabelText('Localidad'));
+
+    expect(await screen.findByText('Huacalera')).toBeOnTheScreen();
+    expect(screen.queryByText('Maimará')).toBeNull();
+  });
+
+  it('drops the locality when another municipality is chosen', async () => {
+    const latest = await renderStep({
+      producer: { ...juan, department: 'TILCARA', municipality: 2, locality: 4 },
+    });
+
+    await fireEvent.press(screen.getByLabelText('Municipio'));
+    await fireEvent.press(await screen.findByText('Comisión Huacalera'));
+
+    expect(latest.current.producer).toMatchObject({ municipality: 1, locality: null });
+  });
+
+  it('adds a locality the phone does not have by its name, inside the municipality', async () => {
+    const latest = await renderStep({
+      producer: { ...juan, department: 'TILCARA', municipality: 2 },
+    });
 
     await fireEvent.press(screen.getByLabelText('Localidad'));
     await fireEvent.changeText(screen.getByRole('search'), 'El Moreno');
     await fireEvent.press(await screen.findByText('Agregar localidad «El Moreno»'));
 
-    expect(latest.current.producer.locality).toEqual({ name: 'El Moreno' });
-    expect(screen.getByText('Localidad nueva: se agrega al enviar el censo.')).toBeOnTheScreen();
+    expect(latest.current.producer).toMatchObject({
+      municipality: 2,
+      locality: { name: 'El Moreno' },
+    });
+    expect(
+      screen.getByText('Localidad nueva: se agrega al municipio al enviar el censo.'),
+    ).toBeOnTheScreen();
+  });
+
+  it('does not add a locality without a municipality', async () => {
+    await renderStep({ producer: { ...juan, department: 'TILCARA' } });
+
+    expect(
+      screen.getByText('Para agregar una localidad nueva, elegí primero el municipio.'),
+    ).toBeOnTheScreen();
+    await fireEvent.press(screen.getByLabelText('Localidad'));
+    await fireEvent.changeText(screen.getByRole('search'), 'El Moreno');
+
+    expect(screen.queryByText('Agregar localidad «El Moreno»')).toBeNull();
   });
 
   it('fills the coordinates from the GPS', async () => {

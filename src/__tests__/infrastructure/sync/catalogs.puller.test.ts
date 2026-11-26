@@ -16,7 +16,15 @@ import {
 type Reply = { status: number; data?: unknown; etag?: string } | 'network';
 
 const catalogs: Catalogs = {
-  localities: [{ id: 155, department: 'DOCTOR_MANUEL_BELGRANO', name: 'San Salvador de Jujuy' }],
+  municipalities: [{ id: 4, department: 'DOCTOR_MANUEL_BELGRANO', name: 'San Salvador de Jujuy' }],
+  localities: [
+    {
+      id: 155,
+      department: 'DOCTOR_MANUEL_BELGRANO',
+      name: 'San Salvador de Jujuy',
+      municipalityId: 4,
+    },
+  ],
   livestockBreeds: [{ id: 1, species: 'CATTLE', name: 'Criolla' }],
   forestSpecies: [{ id: 7, name: 'Algarrobo' }],
   producers: [
@@ -149,10 +157,38 @@ describe('pullCatalogs', () => {
     ]);
   });
 
+  it('takes the localities of an API from before the municipalities, without municipality', async () => {
+    const store = fakeStore(null);
+    const { municipalities: _, ...data } = {
+      ...catalogs,
+      localities: [
+        { id: 155, department: 'DOCTOR_MANUEL_BELGRANO', name: 'San Salvador de Jujuy' },
+      ],
+    };
+    const pull = createCatalogsPuller({ http: fakeApi([{ status: 200, data }]).http, store, now });
+
+    await pull();
+
+    expect(store.saved().catalogs?.municipalities).toEqual([]);
+    expect(store.saved().catalogs?.localities).toEqual([
+      {
+        id: 155,
+        department: 'DOCTOR_MANUEL_BELGRANO',
+        name: 'San Salvador de Jujuy',
+        municipalityId: null,
+      },
+    ]);
+  });
+
   it.each([
     ['a body that is not an object', 'oops'],
     ['a missing list', { ...catalogs, producers: undefined }],
     ['an item with a wrong field', { ...catalogs, localities: [{ id: '155', name: 'X' }] }],
+    [
+      'a locality with a wrong municipality',
+      { ...catalogs, localities: [{ ...catalogs.localities[0], municipalityId: '4' }] },
+    ],
+    ['a municipality with a wrong field', { ...catalogs, municipalities: [{ id: 4, name: 1 }] }],
     [
       'a farm with a wrong field',
       { ...catalogs, producers: [{ ...catalogs.producers[0], farms: [{ id: 3, label: 1 }] }] },

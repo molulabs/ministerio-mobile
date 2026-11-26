@@ -15,6 +15,18 @@ export const syncState = sqliteTable('sync_state', {
  * writes them, replacing each table whole; the ids are the API's.
  */
 
+/** Municipios and comisiones municipales alike, each of one department. */
+export const municipalities = sqliteTable(
+  'municipalities',
+  {
+    id: integer('id').primaryKey(),
+    /** The API's Department enum value, e.g. DOCTOR_MANUEL_BELGRANO. */
+    department: text('department').notNull(),
+    name: text('name').notNull(),
+  },
+  (table) => [index('municipalities_department_idx').on(table.department)],
+);
+
 export const localities = sqliteTable(
   'localities',
   {
@@ -22,8 +34,13 @@ export const localities = sqliteTable(
     /** The API's Department enum value, e.g. DOCTOR_MANUEL_BELGRANO. */
     department: text('department').notNull(),
     name: text('name').notNull(),
+    /** Null while the API's catalog does not say which municipality it is in. */
+    municipalityId: integer('municipality_id'),
   },
-  (table) => [index('localities_department_idx').on(table.department)],
+  (table) => [
+    index('localities_department_idx').on(table.department),
+    index('localities_municipality_idx').on(table.municipalityId),
+  ],
 );
 
 export const livestockBreeds = sqliteTable(

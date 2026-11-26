@@ -9,6 +9,7 @@ import {
 
 // The localities live in the local database and the GPS on the phone, which tests do not open.
 jest.mock('@/src/features/census/catalogs.queries', () => ({
+  useMunicipalities: () => [],
   useLocalities: () => [],
 }));
 jest.mock('@/src/infrastructure/location/currentLocation', () => ({

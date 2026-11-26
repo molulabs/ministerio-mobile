@@ -208,6 +208,13 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "municipality_id": {
+          "name": "municipality_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         }
       },
       "indexes": {
@@ -215,6 +222,13 @@
           "name": "localities_department_idx",
           "columns": [
             "department"
+          ],
+          "isUnique": false
+        },
+        "localities_municipality_idx": {
+          "name": "localities_municipality_idx",
+          "columns": [
+            "municipality_id"
           ],
           "isUnique": false
         }
@@ -299,6 +313,45 @@
         }
       },
       "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "municipalities": {
+      "name": "municipalities",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "department": {
+          "name": "department",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "municipalities_department_idx": {
+          "name": "municipalities_department_idx",
+          "columns": [
+            "department"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},

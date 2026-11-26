@@ -1,19 +1,36 @@
 import { AutocompleteField } from '@/src/shared/ui/AutocompleteField';
 
-import { useLocalities } from '../../catalogs.queries';
+import type { Locality } from '../../catalogs.queries';
 import { FIELD_TEXTS as T } from './fields.constants';
 import type { LocalityRef } from './fields.helper';
 
 type Props = {
   department: string;
+  /** The department's localities on the phone. */
+  localities: Locality[];
+  /** Once there is one, only its localities are offered, and a new one is added inside it. */
+  municipality: number | null;
   value: LocalityRef;
   onChange: (locality: LocalityRef) => void;
   error?: string;
 };
 
-/** The locality, among the department's on the phone, or a new one by its name. */
-export function LocalityField({ department, value, onChange, error }: Props) {
-  const localities = useLocalities(department);
+/**
+ * The locality, among the department's (or its municipality's) on the phone, or a new one by its
+ * name: only inside a municipality, since every locality is in one.
+ */
+export function LocalityField({
+  department,
+  localities,
+  municipality,
+  value,
+  onChange,
+  error,
+}: Props) {
+  const offered =
+    municipality === null
+      ? localities
+      : localities.filter((locality) => locality.municipalityId === municipality);
   const label =
     value === null
       ? ''
@@ -25,9 +42,9 @@ export function LocalityField({ department, value, onChange, error }: Props) {
     <AutocompleteField
       label={T.locality}
       valueLabel={label}
-      options={localities.map((locality) => ({ label: locality.name, value: locality.id }))}
+      options={offered.map((locality) => ({ label: locality.name, value: locality.id }))}
       onPick={(option) => onChange(option.value)}
-      onCreate={(name) => onChange({ name })}
+      onCreate={municipality === null ? undefined : (name) => onChange({ name })}
       createLabel={T.createLocality}
       placeholder={T.localityPlaceholder}
       emptyLabel={T.localityEmpty}
@@ -38,7 +55,9 @@ export function LocalityField({ department, value, onChange, error }: Props) {
           ? T.localityNeedsDepartment
           : value !== null && typeof value === 'object'
             ? T.newLocality
-            : undefined
+            : municipality === null
+              ? T.localityNeedsMunicipality
+              : undefined
       }
     />
   );

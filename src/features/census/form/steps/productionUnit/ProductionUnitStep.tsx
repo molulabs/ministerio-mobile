@@ -1,13 +1,11 @@
 import { Field, MultiChoice, SectionHeader } from '@molulabs/ds';
 
-import { SelectField } from '@/src/shared/ui/SelectField';
 import { Text } from '@/src/shared/ui/Text';
 import { TextField } from '@/src/shared/ui/TextField';
 import { YesNoField } from '@/src/shared/ui/YesNoField';
 
 import { CoordinatesFields } from '../../fields/CoordinatesFields';
-import { DEPARTMENT_OPTIONS, FIELD_TEXTS } from '../../fields/fields.constants';
-import { LocalityField } from '../../fields/LocalityField';
+import { PlaceFields } from '../../fields/PlaceFields';
 import {
   LAND_TENURE_OPTIONS,
   MAX_LENGTH,
@@ -61,18 +59,13 @@ export function ProductionUnitStep({ values, producerLivesOnFarm, onChange }: Pr
             onChangeText={(number) => set({ number })}
             maxLength={MAX_LENGTH.number}
           />
-          <SelectField
-            label={FIELD_TEXTS.department}
-            value={values.department}
-            // The locality belongs to the department, so a new one starts it over.
-            onChange={(department) => set({ department, locality: null })}
-            options={DEPARTMENT_OPTIONS}
-            placeholder={FIELD_TEXTS.departmentPlaceholder}
-          />
-          <LocalityField
-            department={values.department}
-            value={values.locality}
-            onChange={(locality) => set({ locality })}
+          <PlaceFields
+            value={{
+              department: values.department,
+              municipality: values.municipality,
+              locality: values.locality,
+            }}
+            onChange={set}
           />
           <TextField
             label={T.paraje}

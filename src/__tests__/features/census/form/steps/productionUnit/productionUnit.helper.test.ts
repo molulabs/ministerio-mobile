@@ -21,6 +21,7 @@ describe('productionUnit.helper', () => {
       street: null,
       number: null,
       department: null,
+      municipalityId: null,
       localityId: null,
       paraje: null,
       latitude: null,
