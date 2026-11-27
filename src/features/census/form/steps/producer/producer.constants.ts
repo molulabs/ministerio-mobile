@@ -6,6 +6,17 @@ export const DOCUMENT_TYPE_OPTIONS = [
   { value: 'PASAPORTE', label: 'Pasaporte' },
 ];
 
+/**
+ * A producer whose DNI and CUIL were lost when a census sheet was transcribed: only the office's
+ * census import gives it, with a number "SD-<import>-<line>" (the API's DocumentType::PROVISIONAL),
+ * so it is never offered to choose. A phone can census them as any registered producer.
+ */
+export const PROVISIONAL_DOCUMENT = {
+  type: 'SIN_DOCUMENTO',
+  label: 'Sin documento',
+  prefix: 'SD-',
+};
+
 /** A CUIL has 11 digits: a search with 11 digits starts a producer with a CUIL. */
 export const CUIL_DIGITS = 11;
 

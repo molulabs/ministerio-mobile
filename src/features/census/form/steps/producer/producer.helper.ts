@@ -9,7 +9,7 @@ import {
   toId,
   toNumber as toCoordinate,
 } from '../../fields/fields.helper';
-import { CUIL_DIGITS } from './producer.constants';
+import { CUIL_DIGITS, PROVISIONAL_DOCUMENT } from './producer.constants';
 
 /** What the producer step edits of the producer, as typed. */
 export type ProducerValues = {
@@ -126,6 +126,12 @@ export function newProducer(text: string): ProducerValues {
     : { ...start, documentNumber: digits };
 }
 
+/** The type a registered producer's document is, told by the number: the phone has no more. */
+function documentTypeOf(documentNumber: string): string {
+  if (documentNumber.startsWith(PROVISIONAL_DOCUMENT.prefix)) return PROVISIONAL_DOCUMENT.type;
+  return onlyDigits(documentNumber).length === CUIL_DIGITS ? 'CUIL' : 'DNI';
+}
+
 /**
  * A registered producer, of whom the phone has only the name and the document. The API keeps
  * their document type and every field left empty, so nothing else starts filled: not even the
@@ -136,13 +142,16 @@ export function registeredProducer(producer: IndexedProducer): ProducerValues {
     ...EMPTY_PRODUCER,
     fullName: producer.fullName,
     documentNumber: producer.documentNumber,
-    documentType: onlyDigits(producer.documentNumber).length === CUIL_DIGITS ? 'CUIL' : 'DNI',
+    documentType: documentTypeOf(producer.documentNumber),
   };
 }
 
-/** A passport keeps its letters; any other document is its digits, as the index has them. */
+/**
+ * A passport keeps its letters, and "Sin documento" its "SD-…" number, by which the API finds the
+ * producer; any other document is its digits, as the index has them.
+ */
 const documentOf = (values: ProducerValues) =>
-  values.documentType === 'PASAPORTE'
+  values.documentType === 'PASAPORTE' || values.documentType === PROVISIONAL_DOCUMENT.type
     ? values.documentNumber.trim()
     : onlyDigits(values.documentNumber);
 

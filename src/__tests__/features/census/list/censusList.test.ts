@@ -60,6 +60,16 @@ describe('toListItem', () => {
     });
   });
 
+  it('shows a producer Sin documento by that label and the import number', () => {
+    expect(
+      toListItem(
+        row({
+          payload: { producer: { documentType: 'SIN_DOCUMENTO', documentNumber: 'SD-12-5' } },
+        }),
+      )?.document,
+    ).toBe('Sin documento (SD-12-5)');
+  });
+
   it('shows the document number alone when the type is missing', () => {
     expect(
       toListItem(row({ payload: { producer: { documentNumber: '30111222' } } }))?.document,

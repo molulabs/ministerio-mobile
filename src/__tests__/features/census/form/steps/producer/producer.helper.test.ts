@@ -37,6 +37,21 @@ describe('producer.helper', () => {
     });
   });
 
+  it('starts a registered producer Sin documento with that type, told by the import number', () => {
+    expect(registeredProducer({ documentNumber: 'SD-12-5', fullName: 'Juan Mamani' })).toEqual({
+      ...EMPTY_PRODUCER,
+      fullName: 'Juan Mamani',
+      documentNumber: 'SD-12-5',
+      documentType: 'SIN_DOCUMENTO',
+    });
+  });
+
+  it('sends the number of a producer Sin documento as is, so the API finds them', () => {
+    expect(
+      toProducerPayload(registeredProducer({ documentNumber: 'SD-12-5', fullName: 'Juan Mamani' })),
+    ).toMatchObject({ documentType: 'SIN_DOCUMENTO', documentNumber: 'SD-12-5' });
+  });
+
   it('sends what was left empty as null, so it erases nothing of a registered producer', () => {
     const payload = toProducerPayload({
       ...EMPTY_PRODUCER,

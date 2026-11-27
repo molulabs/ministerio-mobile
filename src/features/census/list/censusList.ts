@@ -1,6 +1,7 @@
 import type { CensusFieldError, CensusStatus } from '@/src/infrastructure/db/schema';
 
 import { labelOfField } from '../form/fieldLabels';
+import { PROVISIONAL_DOCUMENT } from '../form/steps/producer/producer.constants';
 
 /** A census as the list shows it. */
 export type CensusListItem = {
@@ -30,6 +31,9 @@ function describeDocument(type: unknown, number: unknown): string | null {
   const documentNumber = stringOrNull(number);
   if (!documentNumber) return null;
   const documentType = stringOrNull(type);
+  if (documentType === PROVISIONAL_DOCUMENT.type) {
+    return `${PROVISIONAL_DOCUMENT.label} (${documentNumber})`;
+  }
   return documentType ? `${documentType} ${documentNumber}` : documentNumber;
 }
 
